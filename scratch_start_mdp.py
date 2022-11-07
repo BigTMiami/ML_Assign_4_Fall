@@ -110,7 +110,7 @@ def percent_fire_review(S=10,gamma = 0.9,wait_reward=4,cut_reward=2 ):
     for i in range(1, 10):
         p = round(i * 0.1, 1)
         P, R = example.forest(S=S, p=p, r1=wait_reward, r2=cut_reward)
-        vi = mdp.ValueIteration(P, R, gamma)
+        vi = mdp.PolicyIteration(P, R, gamma)
         vi.setVerbose()
         info = vi.run()
         p_V[p] = vi.V
@@ -123,7 +123,6 @@ info = percent_fire_review(S=5,gamma=.9)
 chart_reward_vs_error(info)
 chart_change_vs_iteration(info)
 chart_value_vs_iteration(info)
-
 
 def vi_run(S=10,forest_fire_percent=0.1, gamma = 0.9,wait_reward=4,cut_reward=2 ):
     P, R = example.forest(S=S, p=forest_fire_percent, r1=wait_reward, r2=cut_reward)
@@ -143,49 +142,74 @@ def pi_run(S=10,forest_fire_percent=0.1, gamma = 0.9,wait_reward=4,cut_reward=2 
     chart_value_vs_iteration(info)
     return info
 
+def compare_vi_pi(S_max=10,forest_fire_percent=0.1, gamma = 0.9,gamma_range=None, wait_reward=4,cut_reward=2 ):
+    review={}
+    for S in range(2,S_max):
+        review[S] = {}
+        P, R = example.forest(S=S, p=forest_fire_percent, r1=wait_reward, r2=cut_reward)
+        pi = mdp.PolicyIteration(P, R, gamma=gamma)
+        pi.run()
+        review[S]["pi_time"] = pi.time
+        review[S]["pi_iter"] = pi.iter      
+
+        vi = mdp.ValueIteration(P, R, gamma=gamma)
+        vi.run()
+        review[S]["vi_time"] = vi.time
+        review[S]["vi_iter"] = vi.iter  
+
+    df = pd.DataFrame.from_dict(review, orient='index')
+
+    ax = sns.lineplot(df["pi_time"],label="Policy Iteration", color="g")
+    sns.lineplot(df["vi_time"],label="Value Iteration", color="y")
+    ax.set_xlabel("States")
+    ax.set_ylabel("Time") 
+    plt.show()
+
+    ax = sns.lineplot(df["pi_iter"],label="Policy Iteration", color="g")
+    sns.lineplot(df["vi_iter"],label="Value Iteration", color="y")
+    ax.set_xlabel("States")
+    ax.set_ylabel("Iterations")
+    plt.show()
+
+    if gamma_range is not None:
+        S = 10
+        review={}
+        for gamma in gamma_range:
+            print(gamma)
+            review[gamma] = {}
+            P, R = example.forest(S=S, p=forest_fire_percent, r1=wait_reward, r2=cut_reward)
+            pi = mdp.PolicyIteration(P, R, gamma=gamma)
+            pi.run()
+            review[gamma]["pi_time"] = pi.time
+            review[gamma]["pi_iter"] = pi.iter      
+
+            vi = mdp.ValueIteration(P, R, gamma=gamma)
+            vi.run()
+            review[gamma]["vi_time"] = vi.time
+            review[gamma]["vi_iter"] = vi.iter  
+
+        df = pd.DataFrame.from_dict(review, orient='index')
+
+        ax = sns.lineplot(df["pi_time"],label="Policy Iteration", color="g")
+        sns.lineplot(df["vi_time"],label="Value Iteration", color="y")
+        ax.set_xlabel("Gamma")
+        ax.set_ylabel("Time")
+        plt.show()
+
+        ax = sns.lineplot(df["pi_iter"],label="Policy Iteration", color="g")
+        sns.lineplot(df["vi_iter"],label="Value Iteration", color="y")
+        ax.set_xlabel("Gamma")
+        ax.set_ylabel("Iterations")
+        plt.show()        
+
+    return df
+
+df = compare_vi_pi(S_max=250,gamma_range=[.1,.5,.9,.99])
+
 info = vi_run(S=5,gamma=.9)
 pprint(info)
 info = pi_run(S=5,gamma=.9)
 pprint(info)
-
-
-df = df_from_info(info, ["Policy"])
-df
-dfs = df_string_policy(df)
-dfs
-
-policy = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-value = np.array([141.56611949, 143.15496483, 144.93818069, 146.9395453 ,
-       149.18574576, 151.70673393, 154.53612581, 157.71164981,
-       161.27564981, 165.27564981])
-chart_policy_vs_value(policy, value)
-
-gamma = 0.9
-r1 = 4
-r2 = 2
-p = 0.1
-S = 100
-for gamma in range(1, 10):
-    P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
-    vi = mdp.ValueIteration(P, R, 0.9 + gamma * 0.01)
-    print(f"MAX ITER:{vi.max_iter}")
-    info = vi.run()
-    print(f"ITER:{vi.iter}")
-
-
-S = 100
-
-gamma = 0.9
-r1 = 4
-r2 = 2
-p = 0.1
-epsilon = 0.01
-P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
-vi = mdp.ValueIteration(P, R, gamma, epsilon=epsilon)
-info = vi.run()
-df = value_from_dict(info)
-# df.diff().max(axis=1)
-print(f"VI time:{vi.time:.5f} iter:{vi.iter}")
 
 
 ###################################
