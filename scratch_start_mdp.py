@@ -16,6 +16,20 @@ def string_policy(policy):
     ax = "X"
     return [tree if i == 0 else ax for i in policy]
 
+def df_string_policy(df):
+    switch = {0:"",1:"X"}
+    return df.replace(switch)
+
+
+def df_from_info(info,columns):
+    info_dict = {}
+    for item in info:
+        iteration = item["Iteration"]
+        for column in columns:
+            info_dict[iteration] = item[column]
+    df = pd.DataFrame.from_dict(info_dict, orient="index")
+    return df    
+
 
 def value_from_dict(info_array):
     value_dict = {}
@@ -24,10 +38,8 @@ def value_from_dict(info_array):
 
         value = item["Value"]
         value_dict[iteration] = value
-
     df = pd.DataFrame.from_dict(value_dict, orient="index")
     return df
-
 
 def reward_error_from_dict(info_array):
     out_dict = {}
@@ -39,74 +51,114 @@ def reward_error_from_dict(info_array):
     df = pd.DataFrame.from_dict(out_dict, orient="index")
     return df
 
+def chart_policy_vs_value(policy, value,title=None):
+    dfV = pd.DataFrame.from_dict(value).T
+    dfP = pd.DataFrame.from_dict(policy).T
+    ax = sns.heatmap(dfV, annot=dfP, fmt="", cbar_kws={"label": "Value"})
+    ax.set_yticklabels([f"{x:.0%}" for x in dfV.index], va="center", rotation=0)
+    ax.set_ylabel("Chance of Forest Fire")
+    ax.set_xlabel("Years")
+    ax.set_title(title)
+    plt.show()   
 
-S = 10
-p = 0.3
-gamma = 0.9
-P, R = example.forest(S=S, p=p)
-vi = mdp.ValueIteration(P, R, gamma)
-# vi.setVerbose()
-info = vi.run()
-print(vi.V)
+def chart_reward_vs_error(info):
+    df = pd.DataFrame(info)
+
+    fig, ax1 = plt.subplots()
+    sns.lineplot(df["Reward"], label="Reward", color="g", ax=ax1)
+    ax1.legend(loc="upper right")
+    ax2 = ax1.twinx()
+    sns.lineplot(df["Error"], label="Error", color="r", ax=ax2)
+    ax2.legend(loc="upper left")
+    ax1.set_xlabel("Iterations")
+    plt.show()
+
+def chart_change_vs_iteration(info,title=None):
+    #dfv = value_from_dict(info)
+    dfv = df_from_info(info, ["Value"])
+    dfvp = dfv.pct_change()
+    dfp = df_from_info(info, ["Policy"])
+    dfp = df_string_policy(dfp)
+    # First row NAN
+    #dfvp = dfvp.drop([1])
+    # ax = sns.heatmap(dfvp, annot=True, fmt=".1f", norm=LogNorm(), cbar_kws={"label": "Pct Change"})
+    # ticks = ax.set_yticklabels([f"{x:.0%}" for x in dfV.index], va="center", rotation=0)
+    ax = sns.heatmap(dfvp, annot=dfp, fmt="", norm=LogNorm(), cmap="BuGn", cbar_kws={"label": "Pct Change"})
+    ax.set_yticklabels([int(a) for a in ax.get_yticks()], rotation = 0)
+    ax.set_ylabel("Iterations")
+    ax.set_xlabel("Years")
+    ax.set_title(title)
+    plt.show()
+
+def chart_value_vs_iteration(info,title=None):
+    #dfv = value_from_dict(info)
+    dfv = df_from_info(info, ["Value"])
+    dfp = df_from_info(info, ["Policy"])
+    dfp = df_string_policy(dfp)
+    ax = sns.heatmap(dfv, annot=dfp, fmt="", cmap="BuGn", cbar_kws={"label": "Value"})
+    ax.set_yticklabels([int(a) for a in ax.get_yticks()], rotation = 0)
+    ax.set_ylabel("Iterations")
+    ax.set_xlabel("Years")
+    ax.set_title(title)
+    plt.show()
+
+
+def percent_fire_review(S=10,gamma = 0.9,wait_reward=4,cut_reward=2 ):
+    title = f"Gamma:{gamma}"
+    p_V = {}
+    p_P = {}
+    for i in range(1, 10):
+        p = round(i * 0.1, 1)
+        P, R = example.forest(S=S, p=p, r1=wait_reward, r2=cut_reward)
+        vi = mdp.ValueIteration(P, R, gamma)
+        vi.setVerbose()
+        info = vi.run()
+        p_V[p] = vi.V
+        p_P[p] = string_policy(vi.policy)  
+    chart_policy_vs_value(p_P, p_V,title=title)
+    return info
+
+info = percent_fire_review(S=5,gamma=.9)
+
+chart_reward_vs_error(info)
+chart_change_vs_iteration(info)
+chart_value_vs_iteration(info)
+
+
+def vi_run(S=10,forest_fire_percent=0.1, gamma = 0.9,wait_reward=4,cut_reward=2 ):
+    P, R = example.forest(S=S, p=forest_fire_percent, r1=wait_reward, r2=cut_reward)
+    pi = mdp.ValueIteration(P, R, gamma=gamma)
+    info = pi.run()
+    chart_reward_vs_error(info)
+    chart_change_vs_iteration(info)
+    chart_value_vs_iteration(info)
+    return info
+
+def pi_run(S=10,forest_fire_percent=0.1, gamma = 0.9,wait_reward=4,cut_reward=2 ):
+    P, R = example.forest(S=S, p=forest_fire_percent, r1=wait_reward, r2=cut_reward)
+    pi = mdp.PolicyIteration(P, R, gamma=gamma)
+    info = pi.run()
+    chart_reward_vs_error(info)
+    chart_change_vs_iteration(info)
+    chart_value_vs_iteration(info)
+    return info
+
+info = vi_run(S=5,gamma=.9)
 pprint(info)
-df = pd.DataFrame.from_dict(info)
-df.columns
-vi.policy
-
-max_iter = 1000
-S = 10
-gamma = 0.9
-r1 = 4
-r2 = 2
-title = f"Gamma:{gamma}"
-p_V = {}
-p_P = {}
-for i in range(1, 2):
-    p = round(i * 0.1, 1)
-    P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
-    vi = mdp.ValueIteration(P, R, gamma, max_iter=max_iter)
-    vi.setVerbose()
-    print(f"MAX ITER:{vi.max_iter}")
-    info = vi.run()
-    p_V[p] = vi.V
-    p_P[p] = string_policy(vi.policy)
-
-dfV = pd.DataFrame.from_dict(p_V).T
-dfP = pd.DataFrame.from_dict(p_P).T
-
-ax = sns.heatmap(dfV, annot=dfP, fmt="", cbar_kws={"label": "Value"})
-ticks = ax.set_yticklabels([f"{x:.0%}" for x in dfV.index], va="center", rotation=0)
-ax.set_ylabel("Chance of Forest Fire")
-ax.set_xlabel("Years")
-ax.set_title(title)
-plt.show()
-
-info
-df = pd.DataFrame(info)
-
-fig, ax1 = plt.subplots()
-sns.lineplot(df["Reward"], label="Reward", color="g", ax=ax1)
-ax1.legend(loc="upper right")
-ax2 = ax1.twinx()
-sns.lineplot(df["Error"], label="Error", color="r", ax=ax2)
-ax2.legend(loc="upper left")
-plt.show()
-df["Error"]
-
-dfv = value_from_dict(info)
-dfv
-dfvp = dfv.pct_change()
-# First row NAN
-dfvp = dfvp.drop([1])
-# ax = sns.heatmap(dfvp, annot=True, fmt=".1f", norm=LogNorm(), cbar_kws={"label": "Pct Change"})
-# ticks = ax.set_yticklabels([f"{x:.0%}" for x in dfV.index], va="center", rotation=0)
-ax = sns.heatmap(dfvp, norm=LogNorm(), cbar_kws={"label": "Pct Change"})
-ax.set_ylabel("Chance of Forest Fire")
-ax.set_xlabel("Years")
-ax.set_title(title)
-plt.show()
-
+info = pi_run(S=5,gamma=.9)
 pprint(info)
+
+
+df = df_from_info(info, ["Policy"])
+df
+dfs = df_string_policy(df)
+dfs
+
+policy = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+value = np.array([141.56611949, 143.15496483, 144.93818069, 146.9395453 ,
+       149.18574576, 151.70673393, 154.53612581, 157.71164981,
+       161.27564981, 165.27564981])
+chart_policy_vs_value(policy, value)
 
 gamma = 0.9
 r1 = 4
@@ -160,7 +212,7 @@ info = vi.run()
 df = value_from_dict(info)
 print(f"VI time:{vi.time:.5f} iter:{vi.iter}")
 v = np.round(np.reshape(vi.V, (8, 8)), 4)
-
+info
 
 ax = sns.heatmap(v, cbar_kws={"label": "Value"})
 plt.show()

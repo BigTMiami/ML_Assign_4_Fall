@@ -4,3 +4,8 @@ max_iter governed by gamma, and epsilon.  max_iters is the necessary amount to g
 show rate of change
 
 iteration 
+
+state size vs time
+
+discount, max reward, epsilon / error vs max_iter
+
