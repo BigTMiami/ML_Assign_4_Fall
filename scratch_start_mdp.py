@@ -153,6 +153,7 @@ print(f"PI time:{pi.time:.5f} iter:{pi.iter}")
 #######################################
 lake_map = generate_random_map(size=8)
 lake_map
+
 P, R = example.openai("FrozenLake-v1", desc=lake_map)
 vi = mdp.ValueIteration(P, R, gamma)
 info = vi.run()
@@ -160,6 +161,77 @@ df = value_from_dict(info)
 print(f"VI time:{vi.time:.5f} iter:{vi.iter}")
 v = np.round(np.reshape(vi.V, (8, 8)), 4)
 vi.policy
-p = np.round(np.reshape(vi.policy, (8, 8)), 4)
+policy = np.round(np.reshape(vi.policy, (8, 8)), 4)
+
 ax = sns.heatmap(p, cbar_kws={"label": "Value"})
 plt.show()
+
+
+map_array = map_to_array(lake_map, 8)
+map_array
+
+
+def map_to_array(map, size):
+    map_array = []
+    for row in map:
+        for letter in row:
+            map_array.append(letter)
+    map_array = np.reshape(map_array, (size, size))
+    return map_array
+
+
+def plot_policy_directions(policy, old_policy, map):
+    size = policy.shape[0]
+    fig, ax = plt.subplots()
+    for start_y, row in enumerate(policy):
+        use_y = size - start_y - 1
+        for start_x, value in enumerate(row):
+            if map[start_y][start_x] == "F":
+                if value == 0:
+                    # left
+                    x = start_x + 0.75
+                    dx = -0.4
+                    y = use_y + 0.5
+                    dy = 0
+                elif value == 2:
+                    # right
+                    x = start_x + 0.25
+                    dx = 0.4
+                    y = use_y + 0.5
+                    dy = 0
+                elif value == 1:
+                    # down
+                    x = start_x + 0.5
+                    dx = 0
+                    y = use_y + 0.75
+                    dy = -0.4
+                elif value == 2:
+                    # up
+                    x = start_x + 0.5
+                    dx = 0
+                    y = use_y + 0.25
+                    dy = 0.4
+                old_value = old_policy[start_y][start_x]
+                facecolor = "red" if value != old_value else "green"
+                plt.arrow(x=x, y=y, dx=dx, dy=dy, width=0.06, facecolor=facecolor)
+            elif map[start_y][start_x] == "H":
+                ax.add_patch(
+                    plt.Circle((start_x + 0.5, use_y + 0.5), 0.4, fill=True, facecolor="blue")
+                )
+    size = len(policy)
+    plt.xlim([0, size])
+    plt.ylim([0, size])
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    plt.grid()
+    plt.show()
+    plt.close()
+
+
+plot_policy_directions(policy, policy, map_array)
+
+for i in range(8):
+    row = ""
+    for j in range(8):
+        row += map_array[i][j]
+    print(row)
