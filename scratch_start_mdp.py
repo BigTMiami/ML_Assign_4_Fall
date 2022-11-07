@@ -160,15 +160,36 @@ info = vi.run()
 df = value_from_dict(info)
 print(f"VI time:{vi.time:.5f} iter:{vi.iter}")
 v = np.round(np.reshape(vi.V, (8, 8)), 4)
-vi.policy
-policy = np.round(np.reshape(vi.policy, (8, 8)), 4)
 
-ax = sns.heatmap(p, cbar_kws={"label": "Value"})
+
+ax = sns.heatmap(v, cbar_kws={"label": "Value"})
 plt.show()
 
 
+vi.policy
+policy = np.round(np.reshape(vi.policy, (8, 8)), 4)
+pp = policy.astype("object")
+pp
+pp[pp==0] = "<"
+pp[pp==1] = "v"
+pp[pp==2] = ">"
+pp[pp==3] = "^"
+
 map_array = map_to_array(lake_map, 8)
-map_array
+map_array.dtype
+map_array[map_array=='F'] = 0
+map_array[map_array=='S'] = 0
+map_array[map_array=='G'] = 1
+map_array[map_array=='H'] = 2
+map_array = map_array.astype('int')
+
+zeros = np.zeros((8,8))
+
+cp = sns.color_palette(['white','green','blue'])
+ax = sns.heatmap(map_array, annot=pp, fmt="", cbar = False, cmap=cp, linewidth=.5, linecolor='black')
+plt.xticks([])
+plt.yticks([])
+plt.show()
 
 
 def map_to_array(map, size):
@@ -181,6 +202,12 @@ def map_to_array(map, size):
 
 
 def plot_policy_directions(policy, old_policy, map):
+    map_policy = 
+    ax = sns.heatmap(zeros, annot=map_array, fmt="", cbar_kws={"label": "Value"})
+    plt.show()
+
+
+def plot_policy_directions_old(policy, old_policy, map):
     size = policy.shape[0]
     fig, ax = plt.subplots()
     for start_y, row in enumerate(policy):
