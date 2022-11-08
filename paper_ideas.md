@@ -9,3 +9,6 @@ state size vs time
 
 discount, max reward, epsilon / error vs max_iter
 
+forest - essentially one best policy
+lake - many maps may have several best policies
+

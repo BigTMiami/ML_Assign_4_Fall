@@ -54,7 +54,7 @@ def reward_error_from_dict(info_array):
 def chart_policy_vs_value(policy, value,title=None):
     dfV = pd.DataFrame.from_dict(value).T
     dfP = pd.DataFrame.from_dict(policy).T
-    ax = sns.heatmap(dfV, annot=dfP, fmt="", cbar_kws={"label": "Value"})
+    ax = sns.heatmap(dfV, annot=dfP, fmt="", cbar_kws={"label": "Value"},annot_kws={ 'weight': 'bold', 'color':'red'})
     ax.set_yticklabels([f"{x:.0%}" for x in dfV.index], va="center", rotation=0)
     ax.set_ylabel("Chance of Forest Fire")
     ax.set_xlabel("Years")
@@ -76,30 +76,31 @@ def chart_reward_vs_error(info):
 def chart_change_vs_iteration(info,title=None):
     #dfv = value_from_dict(info)
     dfv = df_from_info(info, ["Value"])
-    dfvp = dfv.pct_change()
+    dfvp = dfv.pct_change().fillna(0)
+    print(dfvp)
     dfp = df_from_info(info, ["Policy"])
     dfp = df_string_policy(dfp)
-    # First row NAN
-    #dfvp = dfvp.drop([1])
-    # ax = sns.heatmap(dfvp, annot=True, fmt=".1f", norm=LogNorm(), cbar_kws={"label": "Pct Change"})
-    # ticks = ax.set_yticklabels([f"{x:.0%}" for x in dfV.index], va="center", rotation=0)
-    ax = sns.heatmap(dfvp, annot=dfp, fmt="", norm=LogNorm(), cmap="BuGn", cbar_kws={"label": "Pct Change"})
+    print(dfp)
+    ax = sns.heatmap(dfvp, annot=dfp, fmt="", norm=LogNorm(), cmap="BuGn", cbar_kws={"label": "Pct Change"},annot_kws={ 'weight': 'bold', 'color':'red'})
     ax.set_yticklabels([int(a) for a in ax.get_yticks()], rotation = 0)
     ax.set_ylabel("Iterations")
     ax.set_xlabel("Years")
-    ax.set_title(title)
+    ax.set_title("Change vs Iteration")
     plt.show()
+
+info = pi_run(S=5,gamma=.9)
+
 
 def chart_value_vs_iteration(info,title=None):
     #dfv = value_from_dict(info)
     dfv = df_from_info(info, ["Value"])
     dfp = df_from_info(info, ["Policy"])
     dfp = df_string_policy(dfp)
-    ax = sns.heatmap(dfv, annot=dfp, fmt="", cmap="BuGn", cbar_kws={"label": "Value"})
+    ax = sns.heatmap(dfv, annot=dfp, fmt="", cmap="BuGn", cbar_kws={"label": "Value"},annot_kws={ 'weight': 'bold', 'color':'red'})
     ax.set_yticklabels([int(a) for a in ax.get_yticks()], rotation = 0)
     ax.set_ylabel("Iterations")
     ax.set_xlabel("Years")
-    ax.set_title(title)
+    ax.set_title("Value vs Iteration")
     plt.show()
 
 
