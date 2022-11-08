@@ -80,7 +80,7 @@ def chart_policy_vs_value(policy, value, title=None):
     plt.show()
 
 
-def chart_reward_vs_error(info):
+def chart_reward_vs_error(info, title, suptitle, location):
     df = pd.DataFrame(info)
 
     fig, ax1 = plt.subplots()
@@ -90,7 +90,9 @@ def chart_reward_vs_error(info):
     sns.lineplot(df["Error"], label="Error", color="r", ax=ax2)
     ax2.legend(loc="upper left")
     ax1.set_xlabel("Iterations")
-    plt.show()
+    ax1.set_title(title)
+    plt.suptitle(suptitle)
+    save_to_file(plt, suptitle + " " + title, location)
 
 
 def chart_change_vs_iteration(info, title=None):
@@ -151,13 +153,6 @@ def percent_fire_review(S=10, gamma=0.9, wait_reward=4, cut_reward=2):
         p_P[p] = string_policy(vi.policy)
     chart_policy_vs_value(p_P, p_V, title=title)
     return info
-
-
-# info = percent_fire_review(S=5, gamma=0.9)
-
-# chart_reward_vs_error(info)
-# chart_change_vs_iteration(info)
-# chart_value_vs_iteration(info)
 
 
 def vi_run(S=10, forest_fire_percent=0.1, gamma=0.9, wait_reward=4, cut_reward=2):
@@ -326,7 +321,6 @@ def lake_plot_policy_and_value(
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_title(title)
-    suptitle = "Lake Value vs Policy"
     plt.suptitle(suptitle)
     save_to_file(plt, suptitle + " " + title, location)
 
@@ -418,6 +412,13 @@ lake_plot_policy_and_value(vi.policy, vi.V, "VI Test")
 lake_plot_policy(pi.policy, "PI Test")
 lake_plot_policy_and_value(pi.policy, pi.V, "PI Test")
 
+compare_two_policies(
+    pi_info[-1]["Policy"],
+    vi_info[-1]["Policy"],
+    "PI vs VI",
+    "Policy Differences",
+)
+
 compare_two_policies_and_values(
     pi_info[-1]["Policy"],
     vi_info[-1]["Policy"],
@@ -433,12 +434,10 @@ compare_policy_iterations(pi_info, "Policy Iteration Policy Comparison")
 plot_policy_value_iterations(pi_info, "Policy Iteration")
 plot_policy_value_iterations(vi_info, "Value Iteration")
 
-compare_two_policies(
-    pi_info[-1]["Policy"],
-    vi_info[-1]["Policy"],
-    "Policy Iteration vs Value Iteration",
-    "Policy Differences",
-)
+
+chart_reward_vs_error(vi_info, "Lake Reward and Error", "Value Iteration", location=lake_location)
+chart_reward_vs_error(pi_info, "Lake Reward and Error", "Policy Iteration", location=lake_location)
+
 compare_two_policies(
     vi_info[-1]["Policy"],
     pi_info[-1]["Policy"],
