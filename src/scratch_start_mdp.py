@@ -153,11 +153,11 @@ def percent_fire_review(S=10, gamma=0.9, wait_reward=4, cut_reward=2):
     return info
 
 
-info = percent_fire_review(S=5, gamma=0.9)
+# info = percent_fire_review(S=5, gamma=0.9)
 
-chart_reward_vs_error(info)
-chart_change_vs_iteration(info)
-chart_value_vs_iteration(info)
+# chart_reward_vs_error(info)
+# chart_change_vs_iteration(info)
+# chart_value_vs_iteration(info)
 
 
 def vi_run(S=10, forest_fire_percent=0.1, gamma=0.9, wait_reward=4, cut_reward=2):
@@ -245,30 +245,6 @@ def compare_vi_pi(
     return df
 
 
-df = compare_vi_pi(S_max=250, gamma_range=[0.1, 0.5, 0.9, 0.99])
-
-info = vi_run(S=5, gamma=0.9)
-pprint(info)
-info = pi_run(S=5, gamma=0.9)
-pprint(info)
-
-
-###################################
-gamma = 0.9
-r1 = 4
-r2 = 2
-p = 0.1
-P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
-pi = mdp.PolicyIteration(P, R, gamma)
-info = pi.run()
-# pprint(info)
-df = value_from_dict(info)
-# df.diff().max(axis=1)
-print(f"PI time:{pi.time:.5f} iter:{pi.iter}")
-
-###############################
-# LAKE
-###############################
 def map_to_array(map, size, as_int=True):
     map_array = []
     for row in map:
@@ -297,87 +273,12 @@ def lake_policy_as_string(policy):
     return pp
 
 
-#######################################
-gamma = 0.9
-lake_map = generate_random_map(size=8)
-
-P, R = example.openai("FrozenLake-v1", desc=lake_map, is_slippery=True)
-vi = mdp.ValueIteration(P, R, gamma)
-info = vi.run()
-
-pi = mdp.PolicyIteration(P, R, gamma, max_iter=10)
-info = pi.run()
-
-pim = mdp.PolicyIterationModified(P, R, gamma, max_iter=10000)
-info = pim.run()
-info
-
-
-lake_plot_policy(vi.policy, "VI Test")
-lake_plot_policy_and_value(vi.policy, vi.V, "VI Test")
-
-lake_plot_policy(pi.policy, "PI Test")
-lake_plot_policy_and_value(pi.policy, pi.V, "PI Test")
-
-pprint(info)
-info[0]["Policy"]
-info[1]["Policy"]
-
-mask = info[0]["Policy"] == info[1]["Policy"]
-m = np.array(mask)
-m.sum()
-p = np.array(info[1]["Policy"]).astype("object")
-p[m] = ""
-p
-ps = lake_policy_as_string(p)
-ps
-
-for i in range(0, 100):
-    print(f"{i:4}: Error:{info[i]['Error']:.20f} Reward:{info[i]['Reward']:0.10f}")
-
-
-prev_info = info[0]
-for i in range(1, len(info)):
-    curr_info = info[i]
-    change_mask = curr_info["Policy"] == prev_info["Policy"]
-    if change_mask.sum() > 0:
-        print(f"{i}: {change_mask.sum()}")
-
-    prev_info = curr_info
-
-
-for info_iter in info:
-    policy = info_iter["Policy"]
-    value = info_iter["Value"]
-    iteration = info_iter["Iteration"]
-    title = f"Iteration {iteration}"
-    lake_plot_policy_and_value(policy, value, title)
-
-
-def compare_two_policies(policy_1, policy_2, title):
-    mask = policy_1 == policy_2
-    m = np.array(mask)
-    m.sum()
-    p = policy_2.astype("object")
-    p[m] = ""
-    ps = lake_policy_as_string(p)
-    suptitle = f"Compare Policies"
-    lake_plot_policy(ps, title, suptitle=suptitle, red_direction=True, location=lake_location)
-
-
-title = f"Iteration 2 vs 3"
-compare_two_policies(info[2]["Policy"], info[3]["Policy"], title)
-
-
 def lake_plot_policy(
     policy, title, suptitle="Lake Plot Policy", red_direction=False, location=lake_location
 ):
     direction_color = "red" if red_direction else "orange"
-
     pp = lake_policy_as_string(policy)
-
     map_array = map_to_array(lake_map, 8)
-
     cp = sns.color_palette(["white", "green", "blue"])
     ax = sns.heatmap(
         map_array,
@@ -392,15 +293,19 @@ def lake_plot_policy(
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_title(title)
-
     plt.suptitle(suptitle)
     save_to_file(plt, suptitle + " " + title, location)
 
 
-lake_plot_policy(vi.policy, "TEST")
-
-
-def lake_plot_policy_and_value(policy, value, title, location=lake_location):
+def lake_plot_policy_and_value(
+    policy,
+    value,
+    title,
+    suptitle="Lake Value vs Policy",
+    red_direction=False,
+    location=lake_location,
+):
+    direction_color = "red" if red_direction else "orange"
     pp = lake_policy_as_string(policy)
 
     value = np.reshape(value, (8, 8))
@@ -416,7 +321,7 @@ def lake_plot_policy_and_value(policy, value, title, location=lake_location):
         linewidth=0.5,
         linecolor="black",
         cbar_kws={"label": "Value"},
-        annot_kws={"fontsize": 12, "weight": "bold", "color": "orange"},
+        annot_kws={"fontsize": 12, "weight": "bold", "color": direction_color},
     )
     ax.set_xticks([])
     ax.set_yticks([])
@@ -426,4 +331,123 @@ def lake_plot_policy_and_value(policy, value, title, location=lake_location):
     save_to_file(plt, suptitle + " " + title, location)
 
 
+def compare_two_policies(policy_1, policy_2, title, suptitle):
+    mask = policy_1 == policy_2
+    m = np.array(mask)
+    m.sum()
+    p = policy_2.astype("object")
+    p[m] = ""
+    ps = lake_policy_as_string(p)
+    lake_plot_policy(ps, title, suptitle=suptitle, red_direction=True, location=lake_location)
+
+
+def compare_two_policies_and_values(policy_1, policy_2, value_1, value_2, title, suptitle):
+    mask = policy_1 == policy_2
+    m = np.array(mask)
+    m.sum()
+    p = policy_2.astype("object")
+    p[m] = ""
+    ps = lake_policy_as_string(p)
+    value = value_2 - value_1
+    lake_plot_policy_and_value(
+        ps, value, title, suptitle=suptitle, red_direction=True, location=lake_location
+    )
+
+
+def compare_policy_iterations(info, suptitle):
+    prev_policy = info[0]["Policy"]
+    for i in range(1, len(info)):
+        curr_policy = info[i]["Policy"]
+        title = f"{i-1} vs {i}"
+        compare_two_policies(prev_policy, curr_policy, title, suptitle)
+        prev_policy = curr_policy
+
+
+def plot_policy_value_iterations(info, suptitle):
+    for i in range(1, len(info)):
+        iteration = info[i]["Iteration"]
+        policy = info[i]["Policy"]
+        value = info[i]["Value"]
+        title = f"Iteration {iteration}"
+        lake_plot_policy_and_value(policy, value, title, suptitle=suptitle)
+
+
+lake_plot_policy(vi.policy, "TEST")
+
+
+df = compare_vi_pi(S_max=250, gamma_range=[0.1, 0.5, 0.9, 0.99])
+
+info = vi_run(S=5, gamma=0.9)
+pprint(info)
+info = pi_run(S=5, gamma=0.9)
+pprint(info)
+
+
+###################################
+gamma = 0.9
+r1 = 4
+r2 = 2
+p = 0.1
+P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
+pi = mdp.PolicyIteration(P, R, gamma)
+info = pi.run()
+# pprint(info)
+df = value_from_dict(info)
+# df.diff().max(axis=1)
+print(f"PI time:{pi.time:.5f} iter:{pi.iter}")
+
+###############################
+# LAKE
+###############################
+gamma = 0.9
+lake_map = generate_random_map(size=8)
+
+P, R = example.openai("FrozenLake-v1", desc=lake_map, is_slippery=True)
+vi = mdp.ValueIteration(P, R, gamma)
+vi_info = vi.run()
+len(vi_info)
+
+pi = mdp.PolicyIteration(P, R, gamma, max_iter=10)
+pi_info = pi.run()
+len(pi_info)
+
+
+lake_plot_policy(vi.policy, "VI Test")
+lake_plot_policy_and_value(vi.policy, vi.V, "VI Test")
+
+lake_plot_policy(pi.policy, "PI Test")
+lake_plot_policy_and_value(pi.policy, pi.V, "PI Test")
+
+compare_two_policies_and_values(
+    pi_info[-1]["Policy"],
+    vi_info[-1]["Policy"],
+    pi_info[-1]["Value"],
+    vi_info[-1]["Value"],
+    "PI vs VI",
+    "Policy and Value Differences",
+)
+
+compare_policy_iterations(vi_info, "Value Iteration Policy Comparison")
+compare_policy_iterations(pi_info, "Policy Iteration Policy Comparison")
+
+plot_policy_value_iterations(pi_info, "Policy Iteration")
+plot_policy_value_iterations(vi_info, "Value Iteration")
+
+compare_two_policies(
+    pi_info[-1]["Policy"],
+    vi_info[-1]["Policy"],
+    "Policy Iteration vs Value Iteration",
+    "Policy Differences",
+)
+compare_two_policies(
+    vi_info[-1]["Policy"],
+    pi_info[-1]["Policy"],
+    "Value Iteration vs Policy Iteration",
+    "Policy Differences",
+)
+
+
 lake_plot_policy_and_value(vi.policy, vi.V, "Test")
+
+vi.policy
+vi.V
