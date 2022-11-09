@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 
 from chart_util import save_to_file
-from maps import map_large, map_medium, map_small
+from maps import maps
 
 lake_location = "results/lake"
 forest_location = "results/forest"
@@ -277,8 +277,8 @@ def lake_policy_as_string(policy):
 
 def lake_plot_policy(
     policy,
-    title,
     map_used,
+    title_settings,
     suptitle="Lake Plot Policy",
     red_direction=False,
     location=lake_location,
@@ -373,9 +373,10 @@ def compare_two_policies_and_values(
     )
 
 
-def compare_policy_iterations(info, suptitle, map_used):
+def compare_policy_iterations(info, suptitle, map_used, max_iteration=None):
+    max_iteration = max_iteration if max_iteration is not None else len(info)
     prev_policy = info[0]["Policy"]
-    for i in range(1, len(info)):
+    for i in range(1, max_iteration):
         curr_policy = info[i]["Policy"]
         title = f"{i-1} vs {i}"
         compare_two_policies(prev_policy, curr_policy, title, suptitle, map_used)
@@ -434,6 +435,7 @@ def plot_policy_value_iterations(
             curr_ax += 1
     if not seperate_charts:
         plt.suptitle(suptitle)
+        title = f"Iteration {iters_to_use[0]} to {iters_to_use[-1]} "
         save_to_file(plt, suptitle + " " + title, lake_location)
 
 
@@ -456,10 +458,14 @@ print(f"PI time:{pi.time:.5f} iter:{pi.iter}")
 ###############################
 # LAKE
 ###############################
-gamma = 0.9
-map_used = map_small
+gamma = 0.99
+map_name = "Large"
+map_used = maps[map_name]
 is_slippery = True
 P, R = example.openai("FrozenLake-v1", desc=map_used, is_slippery=is_slippery)
+title_settings = f"(Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, {map_name} Map)"
+title_settings
+
 
 vi = mdp.ValueIteration(P, R, gamma)
 vi_info = vi.run()
@@ -494,11 +500,15 @@ compare_two_policies_and_values(
 )
 
 compare_policy_iterations(vi_info, "Value Iteration Policy Comparison", map_used)
-compare_policy_iterations(pi_info, "Policy Iteration Policy Comparison", map_used)
+compare_policy_iterations(
+    pi_info, "Policy Iteration Policy Comparison", map_used, max_iteration=12
+)
 
-plot_policy_value_iterations(pi_info, "Policy Iteration", map_used, seperate_charts=False)
 plot_policy_value_iterations(
-    vi_info, "Value Iteration", map_used, seperate_charts=False, iters_to_use=[0, 3, 6, 9, 12, 14]
+    pi_info, "Policy Iteration", map_used, seperate_charts=False, iters_to_use=[8, 9, 10, 11]
+)
+plot_policy_value_iterations(
+    vi_info, "Value Iteration", map_used, seperate_charts=False, iters_to_use=[0, 3, 6, 9, 13]
 )
 
 chart_reward_vs_error(vi_info, "Lake Reward and Error", "Value Iteration", location=lake_location)
