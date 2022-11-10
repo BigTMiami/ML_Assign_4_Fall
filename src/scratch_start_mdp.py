@@ -20,6 +20,7 @@ from maps import maps
 
 lake_location = "results/lake"
 forest_location = "results/forest"
+forest_actions = 2
 
 
 def get_Q(P, R, V, actions, states, gamma):
@@ -531,6 +532,37 @@ def plot_gamma_iterations(gamma_values, suptitle, map_name, is_slippery, model_t
     save_to_file(plt, suptitle + " " + title, lake_location)
 
 
+def review_stopping_critieria(vi_info, vi, S):
+    # Not used, but reviewed
+    prev_V = vi_info[0]["Value"]
+    prev_Q = Q = np.zeros((forest_actions, S))
+    epsilon = vi.epsilon
+    print(vi.max_iter)
+    for i in range(1, len(vi_info)):
+        info = vi_info[i]
+        i = info["Iteration"]
+        error = info["Error"]
+        curr_V = info["Value"]
+        Q = get_Q(vi.P, vi.R, curr_V, forest_actions, S, gamma)
+        delta_Q = Q - prev_Q
+        max_delta_Q = np.max(np.abs(delta_Q)) / gamma
+        min_diff = np.min(np.abs(Q[1] - Q[0]))
+        max_diff = np.max(np.abs(Q[1] - Q[0]))
+        max_change_V = np.max(np.abs(curr_V - prev_V))
+        print(
+            f"{i:2}: minQ:{min_diff:7.5f}  maxQ:{max_diff:7.5f} maxQDelta:{max_delta_Q:7.5f}  Vact:{max_change_V:7.5f} Error:{error:7.5f} epsilon:{epsilon:7.5f}  Vtheo:{(gamma**i)*r1:7.5f}"
+        )
+        # print(f"      {np.round(np.abs(curr_V),5)}")
+        # print(f"      {np.round(np.abs(prev_V),5)}")
+        # print(f"      {np.round(np.abs(curr_V - prev_V),5)}")
+        prev_V = curr_V
+        prev_Q = Q
+
+        print(f"    {np.round(Q[1][0:2]-Q[0][0:2],11)}")
+        print(f"    {np.round(Q[1][0:2],11)}")
+        print(f"    {np.round(Q[0][0:2],11)}")
+
+
 ###############################
 # Forest
 ###############################
@@ -545,7 +577,7 @@ pi = mdp.PolicyIteration(P, R, gamma)
 pi_info = pi.run()
 len(pi_info)
 
-vi = mdp.ValueIteration(P, R, gamma)
+vi = mdp.ValueIteration(P, R, gamma, epsilon=0.001)
 vi_info = vi.run()
 len(vi_info)
 
@@ -568,6 +600,7 @@ percent_fire_review(gamma=0.95)
 percent_fire_review(wait_reward=8)
 
 compare_vi_pi(S_max=500, gamma_range=[0.5, 0.9, 0.99, 0.999, 0.9999, 0.99999])
+
 
 ###############################
 # LAKE
