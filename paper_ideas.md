@@ -30,3 +30,9 @@ lake - many maps may have several best policies
 
 policy iteration doesn't converge, but ossiclates
 try modified pi to allow convergence using threshold?
+
+# Q learning
+    
+Modifiy to always start in state 0 to better model real life
+
+Forest is challenging - each step initially the right thing to do is to cut
