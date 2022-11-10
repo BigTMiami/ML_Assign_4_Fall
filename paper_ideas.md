@@ -3,6 +3,12 @@ check on nd for PI - if 0
 change charts for forest
 heatmaps with same colorbar
 
+forest 
+iteration vs # states pi vs vi
+time vs # states pi vs vi
+
+can we check V change to deterimine stable policy in vi
+
 
 
 convergence uses max_iter limit calculation - what is this

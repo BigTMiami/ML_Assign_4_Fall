@@ -22,6 +22,13 @@ lake_location = "results/lake"
 forest_location = "results/forest"
 
 
+def get_Q(P, R, V, actions, states, gamma):
+    Q = np.empty((actions, states))
+    for aa in range(actions):
+        Q[aa] = R[aa] + gamma * P[aa].dot(V)
+    return Q
+
+
 def get_size(a):
     return int(sqrt(len(a)))
 
@@ -69,7 +76,7 @@ def reward_error_from_dict(info_array):
     return df
 
 
-def chart_policy_vs_value(policy, value, title=None):
+def chart_policy_vs_value(policy, value, title, suptitle):
     dfV = pd.DataFrame.from_dict(value).T
     dfP = pd.DataFrame.from_dict(policy).T
     ax = sns.heatmap(
@@ -83,7 +90,8 @@ def chart_policy_vs_value(policy, value, title=None):
     ax.set_ylabel("Chance of Forest Fire")
     ax.set_xlabel("Years")
     ax.set_title(title)
-    plt.show()
+    plt.suptitle(suptitle)
+    save_to_file(plt, suptitle + " " + title, forest_location)
 
 
 def chart_reward_vs_error(info, title, suptitle, location):
@@ -101,14 +109,12 @@ def chart_reward_vs_error(info, title, suptitle, location):
     save_to_file(plt, suptitle + " " + title, location)
 
 
-def chart_change_vs_iteration(info, title=None):
+def chart_change_vs_iteration(info, suptitle=None):
     # dfv = value_from_dict(info)
     dfv = df_from_info(info, ["Value"])
     dfvp = dfv.pct_change().fillna(0)
-    print(dfvp)
     dfp = df_from_info(info, ["Policy"])
     dfp = df_string_policy(dfp)
-    print(dfp)
     ax = sns.heatmap(
         dfvp,
         annot=dfp,
@@ -121,11 +127,13 @@ def chart_change_vs_iteration(info, title=None):
     ax.set_yticklabels([int(a) for a in ax.get_yticks()], rotation=0)
     ax.set_ylabel("Iterations")
     ax.set_xlabel("Years")
-    ax.set_title("Change vs Iteration")
-    plt.show()
+    title = "Value Change vs Iteration"
+    ax.set_title(title)
+    plt.suptitle(suptitle)
+    save_to_file(plt, suptitle + " " + title, forest_location)
 
 
-def chart_value_vs_iteration(info, title=None):
+def chart_value_vs_iteration(info, suptitle=None):
     # dfv = value_from_dict(info)
     dfv = df_from_info(info, ["Value"])
     dfp = df_from_info(info, ["Policy"])
@@ -137,27 +145,37 @@ def chart_value_vs_iteration(info, title=None):
         cmap="BuGn",
         cbar_kws={"label": "Value"},
         annot_kws={"weight": "bold", "color": "red"},
+        # linewidths=0.02,
+        # linecolor='black',
     )
     ax.set_yticklabels([int(a) for a in ax.get_yticks()], rotation=0)
-    ax.set_ylabel("Iterations")
-    ax.set_xlabel("Years")
-    ax.set_title("Value vs Iteration")
-    plt.show()
+    ax.set_ylabel("Iteration")
+    ax.set_xlabel("Year")
+    title = "Value vs Iteration"
+    ax.set_title(title)
+    plt.suptitle(suptitle)
+    save_to_file(plt, suptitle + " " + title, forest_location)
 
 
-def percent_fire_review(S=10, gamma=0.9, wait_reward=4, cut_reward=2):
-    title = f"Gamma:{gamma}"
+def percent_fire_review(
+    fire_percents=[0.01, 0.05, 0.1, 0.14, 0.18, 0.2, 0.4, 0.8],
+    S=10,
+    gamma=0.9,
+    wait_reward=4,
+    cut_reward=2,
+):
+    title = f"Policy Iteration (Gamma:{gamma}, Wait Reward:{wait_reward})"
+    suptitle = "Chance of Forest Fire Review"
     p_V = {}
     p_P = {}
-    for i in range(1, 10):
-        p = round(i * 0.1, 1)
+    for p in fire_percents:
         P, R = example.forest(S=S, p=p, r1=wait_reward, r2=cut_reward)
         vi = mdp.PolicyIteration(P, R, gamma)
         vi.setVerbose()
         info = vi.run()
         p_V[p] = vi.V
         p_P[p] = string_policy(vi.policy)
-    chart_policy_vs_value(p_P, p_V, title=title)
+    chart_policy_vs_value(p_P, p_V, title, suptitle)
     return info
 
 
@@ -182,7 +200,15 @@ def pi_run(S=10, forest_fire_percent=0.1, gamma=0.9, wait_reward=4, cut_reward=2
 
 
 def compare_vi_pi(
-    S_max=10, forest_fire_percent=0.1, gamma=0.9, gamma_range=None, wait_reward=4, cut_reward=2
+    suptitle="Forest MDP Value Iteration vs Policy Iteration",
+    S_max=10,
+    forest_fire_percent=0.1,
+    gamma=0.9,
+    gamma_range=None,
+    gamma_S=10,
+    wait_reward=4,
+    cut_reward=2,
+    location=forest_location,
 ):
     review = {}
     for S in range(2, S_max):
@@ -202,23 +228,27 @@ def compare_vi_pi(
 
     ax = sns.lineplot(df["pi_time"], label="Policy Iteration", color="g")
     sns.lineplot(df["vi_time"], label="Value Iteration", color="y")
-    ax.set_xlabel("States")
+    ax.set_xlabel("# of States")
     ax.set_ylabel("Time")
-    plt.show()
+    title = f"# of States vs Time (Gamma={gamma})"
+    ax.set_title(title)
+    plt.suptitle(suptitle)
+    save_to_file(plt, suptitle + " " + title, location)
 
     ax = sns.lineplot(df["pi_iter"], label="Policy Iteration", color="g")
     sns.lineplot(df["vi_iter"], label="Value Iteration", color="y")
-    ax.set_xlabel("States")
+    ax.set_xlabel("# of States")
     ax.set_ylabel("Iterations")
-    plt.show()
+    title = f"# States vs Iterations (Gamma={gamma})"
+    ax.set_title(title)
+    plt.suptitle(suptitle)
+    save_to_file(plt, suptitle + " " + title, location)
 
     if gamma_range is not None:
-        S = 10
         review = {}
         for gamma in gamma_range:
-            print(gamma)
             review[gamma] = {}
-            P, R = example.forest(S=S, p=forest_fire_percent, r1=wait_reward, r2=cut_reward)
+            P, R = example.forest(S=gamma_S, p=forest_fire_percent, r1=wait_reward, r2=cut_reward)
             pi = mdp.PolicyIteration(P, R, gamma=gamma)
             pi.run()
             review[gamma]["pi_time"] = pi.time
@@ -233,17 +263,25 @@ def compare_vi_pi(
 
         ax = sns.lineplot(df["pi_time"], label="Policy Iteration", color="g")
         sns.lineplot(df["vi_time"], label="Value Iteration", color="y")
-        ax.set_xlabel("Gamma")
+        ax.set_xlabel("Gamma (log)")
+        plt.xscale("log")
         ax.set_ylabel("Time")
-        plt.show()
+        title = f"Gamma vs Time (# of States={gamma_S})"
+        ax.set_title(title)
+        plt.suptitle(suptitle)
+        save_to_file(plt, suptitle + " " + title, location)
 
         ax = sns.lineplot(df["pi_iter"], label="Policy Iteration", color="g")
         sns.lineplot(df["vi_iter"], label="Value Iteration", color="y")
-        ax.set_xlabel("Gamma")
+        ax.set_xlabel("Gamma (log)")
+        plt.xscale("log")
         ax.set_ylabel("Iterations")
-        plt.show()
+        title = f"Gamma vs Iterations (# of States={gamma_S})"
+        ax.set_title(title)
+        plt.suptitle(suptitle)
+        save_to_file(plt, suptitle + " " + title, location)
 
-    return df
+    return
 
 
 def map_to_array(map, size, as_int=True):
@@ -316,14 +354,19 @@ def lake_plot_policy_and_value(
     cbar=True,
     vmin=None,
     vmax=None,
+    show_policy=True,
+    cbar_ax=None,
 ):
     save_chart = ax is None
     if save_chart:
         fig, ax = plt.subplots()
     direction_color = "red" if red_direction else "orange"
-    pp = lake_policy_as_string(policy)
+
     size = get_size(value)
     value = np.reshape(value, (size, size))
+    pp = (
+        lake_policy_as_string(policy) if show_policy else np.full((size, size), "", dtype="object")
+    )
 
     ax = sns.heatmap(
         value,
@@ -339,6 +382,7 @@ def lake_plot_policy_and_value(
         cbar_kws={"label": "Value"},
         annot_kws={"fontsize": 12, "weight": "bold", "color": direction_color},
         ax=ax,
+        cbar_ax=cbar_ax,
     )
     ax.set_xticks([])
     ax.set_yticks([])
@@ -401,7 +445,7 @@ def plot_policy_value_iterations(
         fig, ax = plt.subplots(1, len(iters_to_use), figsize=(3 * len(iters_to_use), 4))
         curr_ax = 0
         last_ax = len(iters_to_use) - 1
-        vmin, vmax = value_max_min(pi_info[0:2])
+        vmin, vmax = value_max_min(pi_info)
 
     for i in iters_to_use:
         iteration = info[i]["Iteration"]
@@ -439,21 +483,91 @@ def plot_policy_value_iterations(
         save_to_file(plt, suptitle + " " + title, lake_location)
 
 
-###################################
+def plot_gamma_iterations(gamma_values, suptitle, map_name, is_slippery, model_type):
+    map_used = maps[map_name]
+
+    P, R = example.openai("FrozenLake-v1", desc=map_used, is_slippery=is_slippery)
+    title_settings = f"({'Is' if is_slippery else 'Not'} Slippery, {map_name} Map)"
+
+    gamma_info = []
+    for gamma in gamma_values:
+        if model_type == "vi":
+            model = mdp.ValueIteration(P, R, gamma)
+        elif model_type == "pi":
+            model = mdp.PolicyIteration(P, R, gamma, max_iter=100)
+        else:
+            raise Exception(f"Unsupported model type of {model_type}")
+        info = model.run()
+        gamma_info.append(info[-1])
+
+    fig, ax = plt.subplots(1, len(gamma_values), figsize=(3 * len(gamma_values), 4))
+    curr_ax = 0
+    last_ax = len(gamma_values) - 1
+    vmin, vmax = value_max_min(gamma_info)
+
+    for gamma, info in zip(gamma_values, gamma_info):
+        policy = info["Policy"]
+        value = info["Value"]
+        title = f"Gamma {gamma}"
+        cbar = curr_ax == last_ax
+        cbar_ax = None
+        lake_plot_policy_and_value(
+            policy,
+            value,
+            title,
+            map_used,
+            suptitle=suptitle,
+            vmin=vmin,
+            vmax=vmax,
+            cbar=cbar,
+            ax=ax[curr_ax],
+            show_policy=False,
+            cbar_ax=cbar_ax,
+        )
+        curr_ax += 1
+
+    plt.suptitle(suptitle + " " + title_settings)
+    title = f"gamma {gamma_values[0]} to {gamma_values[-1]} "
+    save_to_file(plt, suptitle + " " + title, lake_location)
+
+
+###############################
+# Forest
+###############################
 gamma = 0.9
 r1 = 4
 r2 = 2
 p = 0.1
 S = 7
 P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
-P
-R
+
 pi = mdp.PolicyIteration(P, R, gamma)
-info = pi.run()
+pi_info = pi.run()
+len(pi_info)
+
+vi = mdp.ValueIteration(P, R, gamma)
+vi_info = vi.run()
+len(vi_info)
+
 # pprint(info)
-df = value_from_dict(info)
-# df.diff().max(axis=1)
-print(f"PI time:{pi.time:.5f} iter:{pi.iter}")
+chart_value_vs_iteration(pi_info, suptitle=f"Policy Iteration (Gamma:{gamma})")
+chart_value_vs_iteration(vi_info, suptitle=f"Value Iteration (Gamma:{gamma})")
+
+chart_change_vs_iteration(pi_info, suptitle=f"Policy Iteration (Gamma:{gamma})")
+chart_change_vs_iteration(vi_info, suptitle=f"Value Iteration (Gamma:{gamma})")
+
+chart_reward_vs_error(
+    pi_info, "Reward vs Error", f"Policy Iteration (Gamma:{gamma})", forest_location
+)
+chart_reward_vs_error(
+    vi_info, "Reward vs Error", f"Value Iteration (Gamma:{gamma})", forest_location
+)
+
+percent_fire_review()
+percent_fire_review(gamma=0.95)
+percent_fire_review(wait_reward=8)
+
+compare_vi_pi(S_max=500, gamma_range=[0.5, 0.9, 0.99, 0.999, 0.9999, 0.99999])
 
 ###############################
 # LAKE
@@ -474,12 +588,14 @@ len(vi_info)
 pi = mdp.PolicyIteration(P, R, gamma, max_iter=100)
 pi_info = pi.run()
 len(pi_info)
+for i in range(50):
+    print(f"{i:2}: {pi_info[i]['Error']}")
 
 lake_plot_policy(vi.policy, "VI Test", map_used)
-lake_plot_policy_and_value(vi.policy, vi.V, "VI Test", map_used)
+lake_plot_policy_and_value(vi.policy, vi.V, "VI Test", map_used, show_policy=False)
 
 lake_plot_policy(pi.policy, "PI Test", map_used)
-lake_plot_policy_and_value(pi.policy, pi.V, "PI Test", map_used)
+lake_plot_policy_and_value(pi.policy, pi.V, "PI Test", map_used, show_policy=False)
 
 compare_two_policies(
     pi_info[-1]["Policy"],
@@ -513,3 +629,7 @@ plot_policy_value_iterations(
 
 chart_reward_vs_error(vi_info, "Lake Reward and Error", "Value Iteration", location=lake_location)
 chart_reward_vs_error(pi_info, "Lake Reward and Error", "Policy Iteration", location=lake_location)
+
+plot_gamma_iterations(
+    [0.1, 0.5, 0.9, 0.99], "Value Iteration Gamma Comparison", "Large", False, "vi"
+)
