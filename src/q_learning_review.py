@@ -23,29 +23,15 @@ forest_location = "results/forest"
 forest_actions = 2
 
 
-def chart_lines(info, lines, title, suptitle, location):
+def chart_lines(info, lines, title, suptitle, location, iter_review_frequency=100):
     df = pd.melt(pd.DataFrame(info), "Iteration")
+    df = df[df["Iteration"] % iter_review_frequency == 0]
     df = df[df.variable.isin(lines)]
 
     fig, ax1 = plt.subplots()
     sns.lineplot(data=df, x="Iteration", y="value", hue="variable")
 
     # ax1.set_xlabel("Iterations")
-    ax1.set_title(title)
-    plt.suptitle(suptitle)
-    save_to_file(plt, suptitle + " " + title, location)
-
-
-def chart_lines_old(info, lines, title, suptitle, location):
-    df = pd.DataFrame(info)
-
-    fig, ax1 = plt.subplots()
-    ax = [ax1]
-    for line in lines:
-        sns.lineplot(df[line], label=line, ax=ax[-1])
-        # ax1.legend(loc="upper right")
-        ax.append(ax[0].twinx())
-    ax1.set_xlabel("Iterations")
     ax1.set_title(title)
     plt.suptitle(suptitle)
     save_to_file(plt, suptitle + " " + title, location)
@@ -62,39 +48,50 @@ S = 7
 P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
 
 
-n_iter = 10000
+n_iter = 1000000
 alpha_decay = 0.9999
 alpha_min = 0.001
-epsilon_decay = 0.999999
+epsilon_decay = 0.999998
 
-ql = mdp.QLearning(
-    P,
-    R,
-    gamma,
-    start_from_begining=True,
-    n_iter=n_iter,
-    alpha_decay=alpha_decay,
-    alpha_min=alpha_min,
-    epsilon_decay=epsilon_decay,
-)
-ql_info = ql.run()
-len(ql_info)
-pprint(ql_info[1000])
-
-ql.S_freq
+ql_all = []
+for i in range(10):
+    print(f"{i} Iteration")
+    ql = mdp.QLearning(
+        P,
+        R,
+        gamma,
+        start_from_begining=True,
+        n_iter=n_iter,
+        alpha_decay=alpha_decay,
+        alpha_min=alpha_min,
+        epsilon_decay=epsilon_decay,
+    )
+    ql_info = ql.run()
+    ql_all += ql_info
 
 chart_lines(
-    ql_info,
+    ql_all,
     ["Epsilon", "Alpha"],
     f"epsilon_decay:{epsilon_decay}",
     "Q Learning Decays",
     forest_location,
+    iter_review_frequency=10000,
 )
 
 chart_lines(
-    ql_info,
-    ["Max V", "Mean V", "V[0]"],
+    ql_all,
+    ["Max V", "V[0]"],
     f"epsilon_decay:{epsilon_decay}",
     "Q Learning Values",
     forest_location,
+    iter_review_frequency=10000,
+)
+
+chart_lines(
+    ql_all,
+    ["running_reward"],
+    f"epsilon_decay:{epsilon_decay}",
+    "Q Learning Running Reward 1000 Iterations",
+    forest_location,
+    iter_review_frequency=1000,
 )

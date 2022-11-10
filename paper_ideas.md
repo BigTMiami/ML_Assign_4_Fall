@@ -36,3 +36,9 @@ try modified pi to allow convergence using threshold?
 Modifiy to always start in state 0 to better model real life
 
 Forest is challenging - each step initially the right thing to do is to cut
+
+bar chart comparing time & iterations till convergence for vi,pi, q
+
+try exponential decay for q learning on epsilon
+
+create twiddle to find epsilon \ alpha maximizer - use call back
