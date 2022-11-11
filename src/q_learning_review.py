@@ -158,11 +158,79 @@ def reachable_forest_percentages(
     save_to_file(plt, suptitle, location)
 
 
-reachable_forest_percentages()
+def forest_q(
+    gamma=0.9,
+    r1=4,
+    r2=2,
+    p=0.1,
+    S=7,
+    n_iter=1000000,
+    alpha_decay=0.99,
+    epsilon_decay=0.99,
+    repeat_count=5,
+):
+
+    P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
+
+    ql_all = []
+    for i in range(repeat_count):
+        print(f"{i} Iteration")
+        ql = mdp.QLearning(
+            P,
+            R,
+            gamma,
+            start_from_begining=True,
+            n_iter=n_iter,
+            alpha_decay=alpha_decay,
+            epsilon_decay=epsilon_decay,
+        )
+        ql_info = ql.run()
+        ql_all += ql_info
+
+    title = f"(epsilon_decay:{epsilon_decay} alpha_decay:{alpha_decay})"
+
+    chart_lines(
+        ql_all,
+        ["Epsilon", "Alpha"],
+        title,
+        "Q Epsilon, Alpha",
+        forest_location,
+        iter_review_frequency=10000,
+    )
+
+    chart_lines(
+        ql_all,
+        ["Max V", "V[0]"],
+        title,
+        "Q Max V, V[0]",
+        forest_location,
+        iter_review_frequency=10000,
+    )
+
+    chart_lines(
+        ql_all,
+        ["running_reward"],
+        title,
+        "Q Running Reward",
+        forest_location,
+        iter_review_frequency=1000,
+    )
+
+    chart_forest_frequencies(ql_all, title)
+
 
 ###############################
 # Forest
 ###############################
+
+forest_q()
+forest_q(epsilon_decay=0.99999)
+forest_q(epsilon_decay=0.999999)
+forest_q(epsilon_decay=0.999998)
+forest_q(epsilon_decay=0.999998, alpha_decay=0.99999)
+forest_q(epsilon_decay=0.99999, alpha_decay=0.99999)
+
+
 gamma = 0.9
 r1 = 4
 r2 = 2
@@ -173,7 +241,6 @@ P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
 
 n_iter = 1000000
 alpha_decay = 0.99999
-alpha_min = 0.001
 epsilon_decay = 0.99999
 
 ql_all = []
@@ -186,7 +253,6 @@ for i in range(3):
         start_from_begining=True,
         n_iter=n_iter,
         alpha_decay=alpha_decay,
-        alpha_min=alpha_min,
         epsilon_decay=epsilon_decay,
     )
     ql_info = ql.run()
@@ -218,7 +284,7 @@ chart_lines(
     title,
     "Q Running Reward",
     forest_location,
-    iter_review_frequency=1000,
+    iter_review_frequency=10000,
 )
 
 chart_forest_frequencies(ql_all, title)
