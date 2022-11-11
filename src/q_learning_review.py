@@ -110,26 +110,77 @@ chart_lines(
     iter_review_frequency=1000,
 )
 
-df = pd.melt(pd.DataFrame(ql_all), "Iteration")
-df = df[df["Iteration"] % 10000 == 0]
 
-# len(ql_all)
-# df["variable"].unique()
+def chart_forest_frequencies(ql_info, title, location=forest_location):
+    df = pd.melt(pd.DataFrame(ql_info), "Iteration")
+    df = df[df["Iteration"] % 10000 == 0]
 
-frequencies = []
-epsilons = []
-for i in range(df["Iteration"].min(), df["Iteration"].max(), 10000):
-    a = np.array(df[(df["variable"] == "S_Freq") & (df.Iteration == i)]["value"])
-    frequencies.append(a.sum(axis=0))
-    e = np.array(df[(df["variable"] == "Epsilon") & (df.Iteration == i)]["value"])
-    epsilons.append(e.mean())
-b = np.array(frequencies)
-epsilons = np.array(epsilons)
+    frequencies = []
+    epsilons = []
+    for i in range(df["Iteration"].min(), df["Iteration"].max(), 10000):
+        f = np.array(df[(df["variable"] == "S_Freq") & (df.Iteration == i)]["value"])
+        frequencies.append(f.sum(axis=0))
+        e = np.array(df[(df["variable"] == "Epsilon") & (df.Iteration == i)]["value"])
+        epsilons.append(e.mean())
+    frequencies = np.array(frequencies)
+    epsilons = np.array(epsilons)
 
-for i in range(1, len(b)):
-    d = b[i] - b[i - 1]
-    wait_cut = d.sum(axis=0) / d.sum()
-    sf = d.sum(axis=1) / d.sum()
-    print(
-        f"{i:2}: {epsilons[i]:0.3f} || {wait_cut[0]:0.3f} {wait_cut[1]:0.3f} || {sf[0]:0.4f} {sf[1]:0.4f} {sf[2]:0.4f} {sf[3]:0.4f} {sf[4]:0.4f} {sf[5]:0.4f} {sf[6]:0.4f} "
+    wcs = []
+    sfs = []
+    for i in range(1, len(frequencies)):
+        freq = frequencies[i] - frequencies[i - 1]
+        freq_sum = freq.sum()
+        wait_cut = freq.sum(axis=0) / freq_sum
+        wcs.append(wait_cut)
+        sf = freq.sum(axis=1) / freq_sum
+        sfs.append(sf)
+        # print(f"{i:2}: {epsilons[i]:0.3f} || {wait_cut[0]:0.3f} {wait_cut[1]:0.3f} || {sf[0]:0.4f} {sf[1]:0.4f} {sf[2]:0.4f} {sf[3]:0.4f} {sf[4]:0.4f} {sf[5]:0.4f} {sf[6]:0.4f} ")
+
+    wcs = np.array(wcs) * 100
+
+    ax = sns.heatmap(
+        wcs,
+        cmap="flare",
+        xticklabels=["Wait", "Cut"],
+        cbar_kws={"format": "%.0f%%", "label": "Frequency Percent"},
     )
+    ax.set_ylabel("Iteration (10000)")
+    ax.set_xlabel("Action")
+    ax.set_title(title)
+    suptitle = "Forest Frequencies Actions"
+    plt.suptitle(suptitle)
+    save_to_file(plt, suptitle + " " + title, location)
+
+    sfs = np.array(sfs) * 100
+
+    ax = sns.heatmap(
+        sfs,
+        cmap="flare",
+        xticklabels=[0, 1, 2, 3, 4, 5, 6],
+        cbar_kws={"format": "%.0f%%", "label": "Frequency Percent"},
+    )
+    ax.set_ylabel("Iteration (10000)")
+    ax.set_xlabel("State")
+    ax.set_title(title)
+    suptitle = "Forest Frequencies States"
+    plt.suptitle(suptitle)
+    save_to_file(plt, suptitle + " " + title, location)
+
+
+title = f"(epsilon_decay:{epsilon_decay} alpha_decay:{alpha_decay})"
+chart_forest_frequencies(ql_all, title)
+
+df = pd.DataFrame(wcs, columns=["Wait", "Cut"]).melt()
+
+ax = sns.violinplot(df, x=df.index, hue="variable")
+plt.show()
+
+a = np.array(wcs)
+
+df = pd.DataFrame(wcs, columns=["Wait", "Cut"]).melt()
+ax = sns.barplot(df, y="value", x=df.index, hue="variable")
+plt.show()
+
+a = np.array(wcs)
+ax = sns.barplot(y=wcs[:, 0])
+plt.show()
