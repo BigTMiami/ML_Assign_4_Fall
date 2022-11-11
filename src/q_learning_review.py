@@ -37,80 +37,6 @@ def chart_lines(info, lines, title, suptitle, location, iter_review_frequency=10
     save_to_file(plt, suptitle + " " + title, location)
 
 
-###############################
-# Forest
-###############################
-gamma = 0.9
-r1 = 4
-r2 = 2
-p = 0.1
-S = 7
-P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
-
-
-percent_reach = 0.5 * 0.9
-curr_state = 1
-for i in range(1, 7):
-    curr_state = curr_state * percent_reach
-    print(f"{i}:{curr_state * 100:8.4f}")
-
-
-percent_reach = 0.9 * 0.9
-curr_state = 1
-for i in range(1, 7):
-    curr_state = curr_state * percent_reach
-    print(f"{i}:{curr_state * 100:8.4f}")
-
-
-n_iter = 1000000
-alpha_decay = 0.99999
-alpha_min = 0.001
-epsilon_decay = 0.99999
-
-ql_all = []
-for i in range(3):
-    print(f"{i} Iteration")
-    ql = mdp.QLearning(
-        P,
-        R,
-        gamma,
-        start_from_begining=True,
-        n_iter=n_iter,
-        alpha_decay=alpha_decay,
-        alpha_min=alpha_min,
-        epsilon_decay=epsilon_decay,
-    )
-    ql_info = ql.run()
-    ql_all += ql_info
-
-chart_lines(
-    ql_all,
-    ["Epsilon", "Alpha"],
-    f"epsilon_decay:{epsilon_decay} alpha_decay:{alpha_decay}",
-    "Q Learning Decays",
-    forest_location,
-    iter_review_frequency=10000,
-)
-
-chart_lines(
-    ql_all,
-    ["Max V", "V[0]"],
-    f"epsilon_decay:{epsilon_decay} alpha_decay:{alpha_decay}",
-    "Q Learning Values",
-    forest_location,
-    iter_review_frequency=10000,
-)
-
-chart_lines(
-    ql_all,
-    ["running_reward"],
-    f"epsilon_decay:{epsilon_decay} alpha_decay:{alpha_decay}",
-    "Q Learning Running Reward 1000 Iterations",
-    forest_location,
-    iter_review_frequency=1000,
-)
-
-
 def chart_forest_frequencies(ql_info, title, location=forest_location):
     df = pd.melt(pd.DataFrame(ql_info), "Iteration")
     df = df[df["Iteration"] % 10000 == 0]
@@ -167,20 +93,132 @@ def chart_forest_frequencies(ql_info, title, location=forest_location):
     save_to_file(plt, suptitle + " " + title, location)
 
 
+def reachable_forest_percentages(
+    epsilon_values=[0.1, 0.5, 1.0], p=0.1, S=7, location=forest_location
+):
+    wait_policy = True
+    wait_state_policy_percentage = 1.0 if wait_policy else 0.0
+    er = len(epsilon_values)
+    reachable_percents = np.ones((er, S))
+    for i, epsilon in enumerate(epsilon_values):
+        wsap = (epsilon * 0.5) + ((1 - epsilon) * wait_state_policy_percentage)
+        ptnt = wsap * (1 - p)
+        for s in range(1, S):
+            reachable_percents[i][s] = reachable_percents[i][s - 1] * ptnt
+
+    fig, [ax1, ax2] = plt.subplots(2, figsize=(7, 4))
+    ax1 = sns.heatmap(
+        reachable_percents * 100,
+        cmap="flare",
+        annot=True,
+        fmt=".5f",
+        # norm=LogNorm(vmin=0.0000001,vmax=100),
+        vmin=0.0000001,
+        vmax=100,
+        # xticklabels=[0, 1, 2, 3, 4, 5, 6],
+        yticklabels=epsilon_values,
+        cbar=False,
+        ax=ax1,
+    )
+    ax1.set_xticks([])
+    ax1.set_ylabel("Epsilon")
+    title = f"Policy {'Wait' if wait_policy else 'Cut'}"
+    ax1.set_title(title)
+
+    wait_policy = not wait_policy
+    wait_state_policy_percentage = 1.0 if wait_policy else 0.0
+    er = len(epsilon_values)
+    reachable_percents = np.ones((er, S))
+    for i, epsilon in enumerate(epsilon_values):
+        wsap = (epsilon * 0.5) + ((1 - epsilon) * wait_state_policy_percentage)
+        ptnt = wsap * (1 - p)
+        for s in range(1, S):
+            reachable_percents[i][s] = reachable_percents[i][s - 1] * ptnt
+
+    ax2 = sns.heatmap(
+        reachable_percents * 100,
+        cmap="flare",
+        annot=True,
+        fmt=".5f",
+        # norm=LogNorm(vmin=0.0000001,vmax=100),
+        vmin=0.0000001,
+        vmax=100,
+        xticklabels=[0, 1, 2, 3, 4, 5, 6],
+        yticklabels=epsilon_values,
+        cbar=False,
+        ax=ax2,
+    )
+    ax2.set_ylabel("Epsilon")
+    ax2.set_xlabel("State")
+    title = f"Policy {'Wait' if wait_policy else 'Cut'}"
+    ax2.set_title(title)
+
+    suptitle = "Forest States Reachability"
+    plt.suptitle(suptitle)
+    save_to_file(plt, suptitle, location)
+
+
+reachable_forest_percentages()
+
+###############################
+# Forest
+###############################
+gamma = 0.9
+r1 = 4
+r2 = 2
+p = 0.1
+S = 7
+P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
+
+
+n_iter = 1000000
+alpha_decay = 0.99999
+alpha_min = 0.001
+epsilon_decay = 0.99999
+
+ql_all = []
+for i in range(3):
+    print(f"{i} Iteration")
+    ql = mdp.QLearning(
+        P,
+        R,
+        gamma,
+        start_from_begining=True,
+        n_iter=n_iter,
+        alpha_decay=alpha_decay,
+        alpha_min=alpha_min,
+        epsilon_decay=epsilon_decay,
+    )
+    ql_info = ql.run()
+    ql_all += ql_info
+
 title = f"(epsilon_decay:{epsilon_decay} alpha_decay:{alpha_decay})"
+
+chart_lines(
+    ql_all,
+    ["Epsilon", "Alpha"],
+    title,
+    "Q Epsilon, Alpha",
+    forest_location,
+    iter_review_frequency=10000,
+)
+
+chart_lines(
+    ql_all,
+    ["Max V", "V[0]"],
+    title,
+    "Q Max V, V[0]",
+    forest_location,
+    iter_review_frequency=10000,
+)
+
+chart_lines(
+    ql_all,
+    ["running_reward"],
+    title,
+    "Q Running Reward",
+    forest_location,
+    iter_review_frequency=1000,
+)
+
 chart_forest_frequencies(ql_all, title)
-
-df = pd.DataFrame(wcs, columns=["Wait", "Cut"]).melt()
-
-ax = sns.violinplot(df, x=df.index, hue="variable")
-plt.show()
-
-a = np.array(wcs)
-
-df = pd.DataFrame(wcs, columns=["Wait", "Cut"]).melt()
-ax = sns.barplot(df, y="value", x=df.index, hue="variable")
-plt.show()
-
-a = np.array(wcs)
-ax = sns.barplot(y=wcs[:, 0])
-plt.show()
