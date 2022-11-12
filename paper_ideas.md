@@ -42,3 +42,14 @@ bar chart comparing time & iterations till convergence for vi,pi, q
 try exponential decay for q learning on epsilon
 
 create twiddle to find epsilon \ alpha maximizer - use call back
+
+Lake
+The model created stays stuck in the holes and G, instead of starting back at start.
+Want to change P for transition back to Start
+
+Create modified QLearning
+
+Change S_new selection to use choice
+Create Terminal States - Holes \ Goal 
+Check if Terminal State, no 
+Create episode over flag 

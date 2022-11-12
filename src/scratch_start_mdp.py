@@ -338,9 +338,9 @@ def lake_plot_policy(
     )
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.set_title(title)
+    ax.set_title(title_settings)
     plt.suptitle(suptitle)
-    save_to_file(plt, suptitle + " " + title, location)
+    save_to_file(plt, suptitle + " " + title_settings, location)
 
 
 def lake_plot_policy_and_value(
