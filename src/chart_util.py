@@ -1,3 +1,4 @@
+import json
 import os
 
 
@@ -27,3 +28,9 @@ def save_to_file(plt, title, location):
         os.remove(filename)
     plt.savefig(fname=filename, bbox_inches="tight")
     plt.close()
+
+
+def save_json_to_file(to_save_dict, file_name, location):
+    file_location = f"{location}/{file_name}"
+    with open(file_location, "w") as f:
+        json.dump(to_save_dict, f, indent=2)

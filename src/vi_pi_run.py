@@ -12,16 +12,19 @@ from vi_pi_functions import compare_two_policies_and_values, lake_plot_policy_an
 ###############################
 # LAKE
 ###############################
-gamma = 0.99
-map_name = "Small"
+gamma = 0.9
+e_stop = 0.0001
+map_name = "Medium"
 map_used = maps[map_name]
 is_slippery = True
 P, R = example.openai("FrozenLake-v1", desc=map_used, is_slippery=is_slippery)
-title_settings = f"({map_name}, Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery)"
+title_settings = (
+    f"({map_name}, Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Stop:{e_stop})"
+)
 title_settings
 
 
-vi = mdp.ValueIteration(P, R, gamma)
+vi = mdp.ValueIteration(P, R, gamma, epsilon=e_stop)
 vi_info = vi.run()
 len(vi_info)
 
@@ -46,14 +49,19 @@ compare_two_policies_and_values(
     "PI and VI Differences",
 )
 
-gamma = 0.9
-map_name = "Medium"
+from pprint import pprint
+
+pprint(pi_info[-1])
+pprint(vi_info[-1])
+
+
+gamma = 0.99
+map_name = "Small"
 map_used = maps[map_name]
 is_slippery = True
 P, R = example.openai("FrozenLake-v1", desc=map_used, is_slippery=is_slippery)
 title_settings = f"({map_name}, Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery)"
 title_settings
-
 
 vi = mdp.ValueIteration(P, R, gamma)
 vi_info = vi.run()

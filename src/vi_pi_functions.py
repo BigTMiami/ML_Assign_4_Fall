@@ -15,7 +15,7 @@ from gym.envs.toy_text.frozen_lake import generate_random_map
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 
-from chart_util import save_to_file
+from chart_util import save_json_to_file, save_to_file
 from maps import maps
 
 lake_location = "results/lake"
@@ -345,7 +345,7 @@ def lake_plot_policy(
 
 def lake_plot_policy_and_value(
     policy,
-    value,
+    values_in,
     title,
     suptitle="Lake Value vs Policy",
     red_direction=False,
@@ -362,8 +362,8 @@ def lake_plot_policy_and_value(
         fig, ax = plt.subplots()
     direction_color = "red" if red_direction else "orange"
 
-    size = get_size(value)
-    value = np.reshape(value, (size, size))
+    size = get_size(values_in)
+    value = np.reshape(values_in, (size, size))
     pp = (
         lake_policy_as_string(policy) if show_policy else np.full((size, size), "", dtype="object")
     )
@@ -390,6 +390,11 @@ def lake_plot_policy_and_value(
     if save_chart:
         plt.suptitle(suptitle)
         save_to_file(plt, suptitle + " " + title, location)
+
+    values_in = values_in.tolist() if isinstance(values_in, np.ndarray) else values_in
+    policy = policy.tolist() if isinstance(policy, np.ndarray) else policy
+    json_info = {"policy": policy, "value": values_in}
+    save_json_to_file(json_info, suptitle + " " + title, location)
 
 
 def compare_two_policies(policy_1, policy_2, title, suptitle, map_used):

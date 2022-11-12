@@ -29,7 +29,8 @@ lake - many maps may have several best policies
 
 
 policy iteration doesn't converge, but ossiclates
-try modified pi to allow convergence using threshold?
+try modified pi to allow convergence using error threshold?
+really just check for super low error in PI
 
 # Q learning
     
@@ -47,9 +48,11 @@ Lake
 The model created stays stuck in the holes and G, instead of starting back at start.
 Want to change P for transition back to Start
 
-Create modified QLearning
+Created  QLearningEpisodic
+    Change S_new selection to use choice
+    Create Terminal States - Holes \ Goal 
+    Check if Terminal State, no 
+    Create episode over flag 
 
-Change S_new selection to use choice
-Create Terminal States - Holes \ Goal 
-Check if Terminal State, no 
-Create episode over flag 
+When checking on VI vs PI for medium lake to get ready to check against Q, VI and PI had very different results!!!  Epsilon is an absolute number defaulted to 0.01 and Lake has a max reward of only 1, so it allowed a lot of difference. Confirm policy difference between two is 0.01, adjust epsilon to check.
+
