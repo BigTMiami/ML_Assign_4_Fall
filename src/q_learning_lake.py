@@ -17,78 +17,12 @@ from matplotlib.colors import LogNorm
 
 from chart_util import save_to_file
 from maps import maps
-from q_learning import chart_lines, lake_location
-
-
-def get_terminal_states(lake_map):
-    states = "".join(lake_map)
-    return [i for i, s in enumerate(states) if s in ["H", "G"]]
-
-
-def chart_lake_frequencies(info, episode, title, location=lake_location):
-    df = pd.melt(pd.DataFrame(info), "Iteration")
-    frequency = np.array(df[(df["variable"] == "S_Freq") & (df["Episode"] == episode)]["value"])
-    freq_sum = frequency.sum()
-    freq_actions = frequency.sum(axis=0) / freq_sum
-    freq_states = frequency.sum(axis=1) / freq_sum
-    freq_states = np.reshape(freq_states, (4, 4))
-
-    ax = sns.heatmap(
-        freq_states[-1],
-        cmap="flare",
-        cbar_kws={"format": "%.0f%%", "label": "Frequency Percent"},
-    )
-    plt.show()
-    return
-
-    # ax.set_ylabel("Iteration (10000)")
-    ax.set_xlabel("State")
-    ax.set_title(title)
-    suptitle = "Lake Frequencies States"
-    plt.suptitle(suptitle)
-    save_to_file(plt, suptitle + " " + title, location)
-
-
-def chart_lake_frequencies_old(info, title, location=lake_location):
-    df = pd.melt(pd.DataFrame(info), "Iteration")
-    df = df[df["Iteration"] % 10000 == 0 & ("S_Freq")]
-
-    frequencies = []
-    epsilons = []
-    for i in range(df["Iteration"].min(), df["Iteration"].max(), 10000):
-        f = np.array(df[(df["variable"] == "S_Freq") & (df.Iteration == i)]["value"])
-        frequencies.append(f.sum(axis=0))
-        e = np.array(df[(df["variable"] == "Epsilon") & (df.Iteration == i)]["value"])
-        epsilons.append(e.mean())
-    frequencies = np.array(frequencies)
-    epsilons = np.array(epsilons)
-
-    wcs = []
-    sfs = []
-    for i in range(1, len(frequencies)):
-        freq = frequencies[i] - frequencies[i - 1]
-        freq_sum = freq.sum()
-        wait_cut = freq.sum(axis=0) / freq_sum
-        wcs.append(wait_cut)
-        sf = freq.sum(axis=1) / freq_sum
-        sfs.append(sf)
-        # print(f"{i:2}: {epsilons[i]:0.3f} || {wait_cut[0]:0.3f} {wait_cut[1]:0.3f} || {sf[0]:0.4f} {sf[1]:0.4f} {sf[2]:0.4f} {sf[3]:0.4f} {sf[4]:0.4f} {sf[5]:0.4f} {sf[6]:0.4f} ")
-
-    sfs = np.array(sfs) * 100
-    sfs = np.reshape(sfs, (4, 4))
-
-    ax = sns.heatmap(
-        sfs[-1],
-        cmap="flare",
-        cbar_kws={"format": "%.0f%%", "label": "Frequency Percent"},
-    )
-    # ax.set_ylabel("Iteration (10000)")
-    ax.set_xlabel("State")
-    ax.set_title(title)
-    suptitle = "Lake Frequencies States"
-    plt.suptitle(suptitle)
-    save_to_file(plt, suptitle + " " + title, location)
-
+from q_learning import (
+    chart_lake_frequencies,
+    chart_lines,
+    get_terminal_states,
+    lake_location,
+)
 
 ###############################
 # LAKE
@@ -98,15 +32,16 @@ map_name = "Small"
 lake_map = maps[map_name]
 is_slippery = True
 P, R = example.openai("FrozenLake-v1", desc=lake_map, is_slippery=is_slippery)
-title_settings = f"(Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, {map_name} Map)"
 
 terminal_states = get_terminal_states(lake_map)
 
-
-n_iter = 1000000
+n_iter = 5000000
 alpha_decay = 0.999999
 epsilon_decay = 0.999999
 
+title_settings = (
+    f"(Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
+)
 
 ql = mdp.QLearningEpisodic(
     P,
@@ -122,10 +57,34 @@ ql_info, episode_stats = ql.run()
 len(ql_info)
 len(episode_stats)
 pprint(ql_info[-1])
-pprint(episode_stats[-2])
+pprint(episode_stats[-1])
+pprint(episode_stats[-3:-1])
+
+chart_lines(
+    episode_stats,
+    ["episode_reward", "Max V"],
+    title_settings,
+    "Test",
+    lake_location,
+    review_frequency=100,
+    x="Episode",
+)
+
+chart_lines(
+    episode_stats,
+    ["Error"],
+    title_settings,
+    "Test Error",
+    lake_location,
+    review_frequency=100,
+    x="Episode",
+)
 
 
-episode = 65000
+episode = episode_stats[-2]["Episode"]
+freq_title_settings = f"Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
+chart_lake_frequencies(episode_stats, episode, freq_title_settings)
+
 df = pd.melt(pd.DataFrame(episode_stats), "Episode")
 # df[(df["variable"] == "S_Freq") & (df["Episode"]  == episode)]["value"]
 # np.array(df[(df["variable"] == "S_Freq") & (df["Episode"]  == episode)]["value"])[0]
@@ -140,7 +99,6 @@ freq_sum = frequency.sum()
 freq_actions = frequency.sum(axis=0) / freq_sum
 freq_states = frequency.sum(axis=1) / freq_sum
 freq_states = np.reshape(freq_states, (4, 4))
-
 
 ax = sns.heatmap(
     freq_states,

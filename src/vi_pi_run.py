@@ -7,6 +7,7 @@ import hiive.mdptoolbox.example as example
 import hiive.mdptoolbox.mdp as mdp
 
 from maps import maps
+from q_learning import chart_lines
 from vi_pi_functions import compare_two_policies_and_values, lake_plot_policy_and_value
 
 ###############################

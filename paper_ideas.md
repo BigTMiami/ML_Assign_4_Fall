@@ -56,3 +56,14 @@ Created  QLearningEpisodic
 
 When checking on VI vs PI for medium lake to get ready to check against Q, VI and PI had very different results!!!  Epsilon is an absolute number defaulted to 0.01 and Lake has a max reward of only 1, so it allowed a lot of difference. Confirm policy difference between two is 0.01, adjust epsilon to check.
 
+Q learning convergence \ stopping condition
+If environment is really unknown, look for plataue in episidic return.  Could also look at v_max, maybe error?
+
+Q learning is sensitive to
+    state size
+        Like Policy iteration, but much more(?), by time, iterations, episdoes
+    to challenge of state space
+        try with no holes, some holes, a lot of holes - easy, normal, hard
+    
+
+

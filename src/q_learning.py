@@ -23,13 +23,13 @@ forest_location = "results/forest"
 forest_actions = 2
 
 
-def chart_lines(info, lines, title, suptitle, location, iter_review_frequency=100):
-    df = pd.melt(pd.DataFrame(info), "Iteration")
-    df = df[df["Iteration"] % iter_review_frequency == 0]
+def chart_lines(info, lines, title, suptitle, location, review_frequency=100, x="Iteration"):
+    df = pd.melt(pd.DataFrame(info), x)
+    df = df[df[x] % review_frequency == 0]
     df = df[df.variable.isin(lines)]
 
     fig, ax1 = plt.subplots()
-    sns.lineplot(data=df, x="Iteration", y="value", hue="variable")
+    sns.lineplot(data=df, x=x, y="value", hue="variable")
 
     # ax1.set_xlabel("Iterations")
     ax1.set_title(title)
@@ -217,3 +217,30 @@ def forest_q(
     )
 
     chart_forest_frequencies(ql_all, title)
+
+
+def get_terminal_states(lake_map):
+    states = "".join(lake_map)
+    return [i for i, s in enumerate(states) if s in ["H", "G"]]
+
+
+def chart_lake_frequencies(
+    episode_stats, episode, title, suptitle="Lake State Visit Frequencies", location=lake_location
+):
+    df = pd.melt(pd.DataFrame(episode_stats), "Episode")
+    frequency = np.array(df[(df["variable"] == "S_Freq") & (df["Episode"] == episode)]["value"])[0]
+    freq_sum = frequency.sum()
+    freq_actions = frequency.sum(axis=0) / freq_sum
+    freq_states = frequency.sum(axis=1) / freq_sum
+    freq_states = np.reshape(freq_states, (4, 4))
+
+    ax = sns.heatmap(
+        freq_states * 100,
+        cmap="flare",
+        cbar_kws={"format": "%.0f%%", "label": "Frequency Percent"},
+    )
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_title(title)
+    plt.suptitle(suptitle)
+    save_to_file(plt, suptitle + " " + title, location)
