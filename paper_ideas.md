@@ -63,7 +63,7 @@ Q learning is sensitive to
     state size
         Like Policy iteration, but much more(?), by time, iterations, episdoes
     to challenge of state space
-        try with no holes, some holes, a lot of holes - easy, normal, hard
+        try with no holes, some holes, a lot of holes - medium easy, medium, medium hard
     
 
 
