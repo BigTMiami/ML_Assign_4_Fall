@@ -8,10 +8,11 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from q_learning import q_lake_run
+from q_learning import chart_lines, get_threshold, q_lake_run
+from vi_pi_functions import lake_location
 
 gamma = 0.9
-map_name = "Small"
+map_name = "Medium"
 is_slippery = True
 n_iter = 5000000
 alpha_decay = 0.999999
@@ -21,24 +22,63 @@ info
 info[-1]
 pprint(info[-1])
 
+title_settings = f"(Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay} Map:{map_name})"
 
-def get_reward_threshold(info, reward_threshold, x="Episode"):
-    df = pd.melt(pd.DataFrame(info), x)
-    y = "episode_reward"
-    dfp = df[df["variable"] == y].copy()
-    dfp["moving_avg"] = dfp["value"].rolling(20).mean()
-    dfp["percent_chg"] = dfp["moving_avg"].pct_change().rolling(10).mean()
-    threshold_episode = dfp[dfp["percent_chg"] < reward_threshold].iloc[0]["Episode"]
-    return threshold_episode
+error_threshold_episode = get_threshold(info, 0.001, "moving_avg", "Error", "Episode")
+chart_lines(
+    info,
+    ["Error"],
+    title_settings,
+    "TEST Q Lake Error",
+    lake_location,
+    review_frequency=100,
+    x="Episode",
+    threshold=error_threshold_episode,
+)
+
+reward_threshold_episode = get_threshold(
+    info, 0.01, "percent_chg", "episode_reward", "Episode", value_window=50, pct_window=30
+)
+reward_threshold_episode
+chart_lines(
+    info,
+    ["episode_reward"],
+    title_settings,
+    "TEST Q Lake Reward",
+    lake_location,
+    review_frequency=100,
+    x="Episode",
+    threshold=reward_threshold_episode,
+)
+
+threshold_column = "moving_avg"
+x = "Error"
+y = "Episode"
+threshold = 0.01
+error_threshold_episode = get_threshold(info, threshold, threshold_column, x, y)
+
+df = pd.melt(pd.DataFrame(info), y)
+dfp = df[df["variable"] == x].copy()
+dfp["moving_avg"] = dfp["value"].rolling(20).mean()
+dfp["percent_chg"] = dfp["moving_avg"].pct_change().rolling(10).mean()
+dfp
+threshold_episode = dfp[dfp[threshold_column] < threshold].iloc[0][y]
 
 
-def get_threshold(info, threshold, threshold_column, y, x="Episode"):
-    df = pd.melt(pd.DataFrame(info), x)
-    dfp = df[df["variable"] == y].copy()
-    dfp["moving_avg"] = dfp["value"].rolling(20).mean()
-    dfp["percent_chg"] = dfp["moving_avg"].pct_change().rolling(10).mean()
-    threshold_episode = dfp[dfp[threshold_column] < threshold].iloc[0]["Episode"]
-    return threshold_episode
+threshold_column = "percent_chg"
+x = "episode_reward"
+y = "Episode"
+threshold = 0.01
+threshold_episode = get_threshold(info, threshold, threshold_column, x, y)
+threshold_episode
+
+df = pd.melt(pd.DataFrame(info), y)
+dfp = df[df["variable"] == x].copy()
+dfp["moving_avg"] = dfp["value"].rolling(20).mean()
+dfp["percent_chg"] = dfp["moving_avg"].pct_change().rolling(10).mean()
+dfp
+threshold_episode = dfp[dfp[threshold_column] < threshold].iloc[0][y]
+threshold_episode
 
 
 x = "Episode"
@@ -67,7 +107,7 @@ dfp["percent_chg"] = dfp["moving_avg"].pct_change().rolling(10).mean()
 
 reward_threshold_episode = dfp[dfp["percent_chg"] < reward_threshold].iloc[0]["Episode"]
 reward_threshold_episode
-test2 = get_threshold(info, 0.001, "percent_chg", "episode_reward")
+test2 = get_threshold(info, 0.001, "percent_chg", "Episode", "episode_reward")
 test2
 
 ax = dfp.plot(x="Episode", y=["percent_chg", "value"], secondary_y=["value"], ylabel="Reward")

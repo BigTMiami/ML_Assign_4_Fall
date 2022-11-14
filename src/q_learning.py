@@ -23,13 +23,40 @@ forest_location = "results/forest"
 forest_actions = 2
 
 
-def chart_lines(info, lines, title, suptitle, location, review_frequency=100, x="Iteration"):
+def get_threshold(info, threshold, threshold_column, x, y, value_window=30, pct_window=10):
+    df = pd.melt(pd.DataFrame(info), y)
+    dfp = df[df["variable"] == x].copy()
+    dfp["moving_avg"] = dfp["value"].rolling(value_window).mean()
+    dfp["percent_chg"] = dfp["moving_avg"].pct_change().rolling(pct_window).mean()
+    min_column_value = dfp[threshold_column].min()
+    if min_column_value < threshold:
+        threshold_episode = dfp[dfp[threshold_column] < threshold].iloc[0][y]
+    else:
+        print(
+            f"No Threshold Found: min_column_value {min_column_value} greater than threshold {threshold} "
+        )
+        threshold_episode = None
+
+    return threshold_episode
+
+
+def chart_lines(
+    info, lines, title, suptitle, location, review_frequency=100, x="Iteration", threshold=None
+):
     df = pd.melt(pd.DataFrame(info), x)
     df = df[df[x] % review_frequency == 0]
     df = df[df.variable.isin(lines)]
 
     fig, ax1 = plt.subplots()
     sns.lineplot(data=df, x=x, y="value", hue="variable")
+
+    if threshold is not None:
+        plt.axvline(x=threshold, color="r", linestyle="-")
+        ymin, ymax = ax1.get_ylim()
+        text_y = (ymax - ymin) / 2
+        xmin, xmax = ax1.get_xlim()
+        text_x_space = (xmax - xmin) * 0.05
+        plt.text(threshold + text_x_space, text_y, "Convergence Threshold", color="r")
 
     # ax1.set_xlabel("Iterations")
     ax1.set_title(title)
@@ -254,6 +281,9 @@ def q_lake_run(
     epsilon_decay,
     is_slippery=True,
     episode_stat_frequency=1000,
+    reward_threshold=0.01,
+    value_window=50,
+    pct_window=30,
 ):
     map_used = maps[map_name]
     lake_map = maps[map_name]
@@ -275,14 +305,25 @@ def q_lake_run(
 
     ql_info, episode_stats = ql.run()
 
+    reward_threshold_episode = get_threshold(
+        episode_stats,
+        reward_threshold,
+        "percent_chg",
+        "episode_reward",
+        "Episode",
+        value_window=value_window,
+        pct_window=pct_window,
+    )
+
     chart_lines(
         episode_stats,
-        ["episode_reward", "Max V"],
+        ["episode_reward"],
         title_settings,
-        "Q Lake Reward and Max V",
+        "Q Lake Reward",
         lake_location,
         review_frequency=100,
         x="Episode",
+        threshold=reward_threshold_episode,
     )
 
     chart_lines(
@@ -293,6 +334,7 @@ def q_lake_run(
         lake_location,
         review_frequency=100,
         x="Episode",
+        threshold=reward_threshold_episode,
     )
 
     chart_lines(
@@ -303,6 +345,7 @@ def q_lake_run(
         lake_location,
         review_frequency=100,
         x="Episode",
+        threshold=reward_threshold_episode,
     )
 
     chart_lines(
@@ -313,25 +356,38 @@ def q_lake_run(
         lake_location,
         review_frequency=100,
         x="Episode",
+        threshold=reward_threshold_episode,
     )
 
     suptitle = f"Q Lake State Visits - {map_name} Map"
     episode = episode_stats[-2]["Episode"]
-    freq_title_settings = f"Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
+    freq_title_settings = f"Last Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
     chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=suptitle)
+
+    if reward_threshold_episode is not None:
+        episode = reward_threshold_episode
+        freq_title_settings = f"Threshold Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
+        chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=suptitle)
 
     episode = 2000
-    freq_title_settings = f"Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
+    freq_title_settings = f"Beginning Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
     chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=suptitle)
 
-    final_stats = episode_stats[-2]
-    for item, value in final_stats.items():
+    if reward_threshold_episode is not None:
+        save_episode = reward_threshold_episode
+        save_type = "Threshold"
+    else:
+        save_episode = episode_stats[-2]["Episode"]
+        save_type = "Final"
+
+    threshold_stats = episode_stats[save_episode]
+    for item, value in threshold_stats.items():
         if isinstance(value, np.ndarray):
-            final_stats[item] = value.tolist()
-    final_stats["alpha_decay"] = alpha_decay
-    final_stats["epsilon_decay"] = epsilon_decay
-    final_stats["map_name"] = map_name
-    final_stats["is_slippery"] = is_slippery
-    save_json_to_file(final_stats, "Q Lake Best " + title_settings, lake_location)
+            threshold_stats[item] = value.tolist()
+    threshold_stats["alpha_decay"] = alpha_decay
+    threshold_stats["epsilon_decay"] = epsilon_decay
+    threshold_stats["map_name"] = map_name
+    threshold_stats["is_slippery"] = is_slippery
+    save_json_to_file(threshold_stats, f"Q Lake {save_type} {title_settings}", lake_location)
 
     return episode_stats
