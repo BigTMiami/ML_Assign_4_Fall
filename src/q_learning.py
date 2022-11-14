@@ -193,7 +193,7 @@ def forest_q(
         ql_all,
         ["Epsilon", "Alpha"],
         title,
-        "Q Epsilon, Alpha",
+        "Q Forest Epsilon, Alpha",
         forest_location,
         iter_review_frequency=10000,
     )
@@ -202,7 +202,7 @@ def forest_q(
         ql_all,
         ["Max V", "V[0]"],
         title,
-        "Q Max V, V[0]",
+        "Q Forest Max V, V[0]",
         forest_location,
         iter_review_frequency=10000,
     )
@@ -211,7 +211,7 @@ def forest_q(
         ql_all,
         ["running_reward"],
         title,
-        "Q Running Reward",
+        "Q Forest Running Reward",
         forest_location,
         iter_review_frequency=1000,
     )
@@ -305,6 +305,16 @@ def q_lake_run(
         x="Episode",
     )
 
+    chart_lines(
+        episode_stats,
+        ["Epsilon", "Alpha"],
+        title_settings,
+        "Q Lake Epsilon and Alpha Decay",
+        lake_location,
+        review_frequency=100,
+        x="Episode",
+    )
+
     suptitle = f"Q Lake State Visits - {map_name} Map"
     episode = episode_stats[-2]["Episode"]
     freq_title_settings = f"Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
@@ -324,4 +334,4 @@ def q_lake_run(
     final_stats["is_slippery"] = is_slippery
     save_json_to_file(final_stats, "Q Lake Best " + title_settings, lake_location)
 
-    return final_stats
+    return episode_stats
