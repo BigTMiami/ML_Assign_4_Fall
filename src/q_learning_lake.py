@@ -60,6 +60,32 @@ pprint(episode_stats[1])
 pprint(episode_stats[-1])
 pprint(episode_stats[-3:-1])
 
+info = episode_stats
+threshold = 0.01
+threshold_column = "percent_chg"
+x = "episode_reward"
+y = "Episode"
+value_window = 30
+pct_window = 10
+
+df = pd.melt(pd.DataFrame(info), y)
+dfp = df[df["variable"] == x].copy()
+dfp["moving_avg"] = dfp["value"].rolling(value_window).mean()
+dfp["percent_chg"] = dfp["moving_avg"].pct_change().rolling(pct_window).mean()
+min_column_value = dfp[threshold_column].dropna().min()
+if min_column_value < threshold:
+    threshold_episode = dfp[dfp[threshold_column] < threshold].iloc[0][y]
+threshold_episode
+dfp[dfp[threshold_column] < threshold].iloc[0]
+
+found_index = None
+for i, value in enumerate(episode_stats):
+    if value["Episode"] == threshold_episode:
+        found_index = i
+        break
+found_index
+
+pprint(episode_stats[found_index])
 
 final_stats = episode_stats[-2]
 

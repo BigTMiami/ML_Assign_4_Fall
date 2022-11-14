@@ -28,7 +28,7 @@ def get_threshold(info, threshold, threshold_column, x, y, value_window=30, pct_
     dfp = df[df["variable"] == x].copy()
     dfp["moving_avg"] = dfp["value"].rolling(value_window).mean()
     dfp["percent_chg"] = dfp["moving_avg"].pct_change().rolling(pct_window).mean()
-    min_column_value = dfp[threshold_column].min()
+    min_column_value = dfp[threshold_column].dropna().min()
     if min_column_value < threshold:
         threshold_episode = dfp[dfp[threshold_column] < threshold].iloc[0][y]
     else:
@@ -245,6 +245,8 @@ def forest_q(
 
     chart_forest_frequencies(ql_all, title)
 
+    return ql_all
+
 
 def get_terminal_states(lake_map):
     states = "".join(lake_map)
@@ -374,13 +376,17 @@ def q_lake_run(
     chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=suptitle)
 
     if reward_threshold_episode is not None:
-        save_episode = reward_threshold_episode
         save_type = "Threshold"
+        save_index = None
+        for index, value in enumerate(episode_stats):
+            if value["Episode"] == reward_threshold_episode:
+                break
+        save_index = index
     else:
-        save_episode = episode_stats[-2]["Episode"]
         save_type = "Final"
+        save_index = -2
 
-    threshold_stats = episode_stats[save_episode]
+    threshold_stats = episode_stats[save_index]
     for item, value in threshold_stats.items():
         if isinstance(value, np.ndarray):
             threshold_stats[item] = value.tolist()

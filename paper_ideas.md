@@ -66,4 +66,5 @@ Q learning is sensitive to
         try with no holes, some holes, a lot of holes - medium easy, medium, medium hard
     
 
+Add reward threshold to forest, along with error chart
 

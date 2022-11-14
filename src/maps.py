@@ -11,7 +11,7 @@ maps = {
         "FFFFFFFG",
     ],
     "Large": [
-        "SHFFHFHFFFFFFFFFFFFH",
+        "SFFFHFHFFFFFFFFFFFFH",
         "FFFFFFFFFFFFFHHFHFFF",
         "FFFFFFFFFFFFFFFFFFFF",
         "FFHFHFFHHFFFFFFFHFHF",

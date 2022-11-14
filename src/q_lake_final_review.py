@@ -14,10 +14,11 @@ from vi_pi_functions import lake_location
 gamma = 0.9
 map_name = "Small"
 is_slippery = True
-n_iter = 5000000
+n_iter = 3000000
 alpha_decay = 0.999999
 epsilon_decay = 0.999999
 info = q_lake_run(map_name, gamma, n_iter, alpha_decay, epsilon_decay, is_slippery=is_slippery)
+
 
 gamma = 0.9
 map_name = "Medium"
@@ -30,7 +31,7 @@ info = q_lake_run(map_name, gamma, n_iter, alpha_decay, epsilon_decay, is_slippe
 gamma = 0.9
 map_name = "Large"
 is_slippery = True
-n_iter = 10000000
-alpha_decay = 0.999999
-epsilon_decay = 0.999999
+n_iter = 100000000
+alpha_decay = 0.99999999
+epsilon_decay = 0.99999999
 info = q_lake_run(map_name, gamma, n_iter, alpha_decay, epsilon_decay, is_slippery=is_slippery)
