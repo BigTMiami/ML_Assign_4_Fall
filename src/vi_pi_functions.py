@@ -357,6 +357,7 @@ def lake_plot_policy_and_value(
     show_policy=True,
     cbar_ax=None,
     value_label="Value",
+    save_json=False,
 ):
     save_chart = ax is None
     if save_chart:
@@ -394,8 +395,9 @@ def lake_plot_policy_and_value(
 
     values_in = values_in.tolist() if isinstance(values_in, np.ndarray) else values_in
     policy = policy.tolist() if isinstance(policy, np.ndarray) else policy
-    json_info = {"policy": policy, "value": values_in}
-    save_json_to_file(json_info, suptitle + " " + title, location)
+    if save_json:
+        json_info = {"policy": policy, "value": values_in}
+        save_json_to_file(json_info, suptitle + " " + title, location)
 
 
 def compare_two_policies(policy_1, policy_2, title, suptitle, map_used):

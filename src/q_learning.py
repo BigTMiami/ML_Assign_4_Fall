@@ -11,11 +11,10 @@ import matplotlib.ticker as mtick
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from gym.envs.toy_text.frozen_lake import generate_random_map
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 
-from chart_util import save_to_file
+from chart_util import save_json_to_file, save_to_file
 from maps import maps
 from vi_pi_functions import lake_plot_policy_and_value
 
@@ -225,29 +224,7 @@ def get_terminal_states(lake_map):
     return [i for i, s in enumerate(states) if s in ["H", "G"]]
 
 
-def chart_lake_frequencies_old(
-    episode_stats, episode, title, suptitle="Lake State Visit Frequencies", location=lake_location
-):
-    df = pd.melt(pd.DataFrame(episode_stats), "Episode")
-    frequency = np.array(df[(df["variable"] == "S_Freq") & (df["Episode"] == episode)]["value"])[0]
-    freq_sum = frequency.sum()
-    size = int(sqrt(len(frequency)))
-    freq_states = frequency.sum(axis=1) / freq_sum
-    freq_states = np.reshape(freq_states, (size, size))
-
-    ax = sns.heatmap(
-        freq_states * 100,
-        cmap="flare",
-        cbar_kws={"format": "%.0f%%", "label": "Frequency Percent"},
-    )
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_title(title)
-    plt.suptitle(suptitle)
-    save_to_file(plt, suptitle + " " + title, location)
-
-
-def chart_lake_frequencies_test(
+def chart_lake_frequencies(
     episode_stats, episode, title, suptitle="Lake State Visit Frequencies", location=lake_location
 ):
     df = pd.melt(pd.DataFrame(episode_stats), "Episode")
@@ -265,4 +242,86 @@ def chart_lake_frequencies_test(
         location=lake_location,
         show_policy=True,
         value_label="Visit Frequency (Percent)",
+        save_json=False,
     )
+
+
+def q_lake_run(
+    map_name,
+    gamma,
+    n_iter,
+    alpha_decay,
+    epsilon_decay,
+    is_slippery=True,
+    episode_stat_frequency=1000,
+):
+    map_used = maps[map_name]
+    lake_map = maps[map_name]
+    P, R = example.openai("FrozenLake-v1", desc=lake_map, is_slippery=is_slippery)
+
+    terminal_states = get_terminal_states(lake_map)
+    title_settings = f"(Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay} Map:{map_name})"
+
+    ql = mdp.QLearningEpisodic(
+        P,
+        R,
+        gamma,
+        terminal_states,
+        n_iter=n_iter,
+        alpha_decay=alpha_decay,
+        epsilon_decay=epsilon_decay,
+        episode_stat_frequency=episode_stat_frequency,
+    )
+
+    ql_info, episode_stats = ql.run()
+
+    chart_lines(
+        episode_stats,
+        ["episode_reward", "Max V"],
+        title_settings,
+        "Q Lake Reward and Max V",
+        lake_location,
+        review_frequency=100,
+        x="Episode",
+    )
+
+    chart_lines(
+        episode_stats,
+        ["Error"],
+        title_settings,
+        "Q Lake Error",
+        lake_location,
+        review_frequency=100,
+        x="Episode",
+    )
+
+    chart_lines(
+        episode_stats,
+        ["Iterations per Episode"],
+        title_settings,
+        "Q Lake Iterations per Episode",
+        lake_location,
+        review_frequency=100,
+        x="Episode",
+    )
+
+    suptitle = f"Q Lake State Visits - {map_name} Map"
+    episode = episode_stats[-2]["Episode"]
+    freq_title_settings = f"Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
+    chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=suptitle)
+
+    episode = 2000
+    freq_title_settings = f"Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
+    chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=suptitle)
+
+    final_stats = episode_stats[-2]
+    for item, value in final_stats.items():
+        if isinstance(value, np.ndarray):
+            final_stats[item] = value.tolist()
+    final_stats["alpha_decay"] = alpha_decay
+    final_stats["epsilon_decay"] = epsilon_decay
+    final_stats["map_name"] = map_name
+    final_stats["is_slippery"] = is_slippery
+    save_json_to_file(final_stats, "Q Lake Best " + title_settings, lake_location)
+
+    return final_stats

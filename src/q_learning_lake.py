@@ -15,7 +15,7 @@ from gym.envs.toy_text.frozen_lake import generate_random_map
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 
-from chart_util import save_to_file
+from chart_util import save_json_to_file, save_to_file
 from maps import maps
 from q_learning import (
     chart_lake_frequencies,
@@ -29,14 +29,14 @@ from vi_pi_functions import lake_plot_policy_and_value
 # LAKE
 ###############################
 gamma = 0.9
-map_name = "Medium"
+map_name = "Small"
 lake_map = maps[map_name]
 is_slippery = True
 P, R = example.openai("FrozenLake-v1", desc=lake_map, is_slippery=is_slippery)
 
 terminal_states = get_terminal_states(lake_map)
 
-n_iter = 5000000
+n_iter = 2500000
 alpha_decay = 0.999999
 epsilon_decay = 0.999999
 
@@ -59,6 +59,19 @@ pprint(ql_info[-1])
 pprint(episode_stats[1])
 pprint(episode_stats[-1])
 pprint(episode_stats[-3:-1])
+
+
+final_stats = episode_stats[-2]
+
+for item, value in final_stats.items():
+    if isinstance(value, np.ndarray):
+        final_stats[item] = value.tolist()
+final_stats["alpha_decay"] = alpha_decay
+final_stats["epsilon_decay"] = epsilon_decay
+final_stats["map_name"] = map_name
+final_stats["is_slippery"] = is_slippery
+save_json_to_file(final_stats, "Q Lake Test", lake_location)
+
 
 chart_lines(
     episode_stats,
@@ -99,30 +112,3 @@ chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=sup
 episode = 2000
 freq_title_settings = f"Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
 chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=suptitle)
-
-
-def chart_lake_frequencies_test(
-    episode_stats, episode, title, suptitle="Lake State Visit Frequencies", location=lake_location
-):
-    df = pd.melt(pd.DataFrame(episode_stats), "Episode")
-    frequency = np.array(df[(df["variable"] == "S_Freq") & (df["Episode"] == episode)]["value"])[0]
-    freq_sum = frequency.sum()
-    freq_states = frequency.sum(axis=1) / freq_sum
-    policy = np.array(df[(df["variable"] == "Policy") & (df["Episode"] == episode)]["value"])[0]
-
-    lake_plot_policy_and_value(
-        policy,
-        freq_states,
-        title,
-        suptitle,
-        red_direction=False,
-        location=lake_location,
-        show_policy=True,
-        value_label="Visit Frequency (Percent)",
-    )
-
-
-suptitle = f"Lake State Visits ({map_name} Map)"
-episode = episode_stats[-2]["Episode"]
-freq_title_settings = f"Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
-chart_lake_frequencies_test(episode_stats, episode, freq_title_settings, suptitle=suptitle)
