@@ -356,6 +356,7 @@ def lake_plot_policy_and_value(
     vmax=None,
     show_policy=True,
     cbar_ax=None,
+    value_label="Value",
 ):
     save_chart = ax is None
     if save_chart:
@@ -379,7 +380,7 @@ def lake_plot_policy_and_value(
         linecolor="black",
         vmin=vmin,
         vmax=vmax,
-        cbar_kws={"label": "Value"},
+        cbar_kws={"label": value_label},
         annot_kws={"fontsize": 12, "weight": "bold", "color": direction_color},
         ax=ax,
         cbar_ax=cbar_ax,

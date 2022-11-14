@@ -17,6 +17,7 @@ from matplotlib.colors import LogNorm
 
 from chart_util import save_to_file
 from maps import maps
+from vi_pi_functions import lake_plot_policy_and_value
 
 lake_location = "results/lake"
 forest_location = "results/forest"
@@ -224,15 +225,15 @@ def get_terminal_states(lake_map):
     return [i for i, s in enumerate(states) if s in ["H", "G"]]
 
 
-def chart_lake_frequencies(
+def chart_lake_frequencies_old(
     episode_stats, episode, title, suptitle="Lake State Visit Frequencies", location=lake_location
 ):
     df = pd.melt(pd.DataFrame(episode_stats), "Episode")
     frequency = np.array(df[(df["variable"] == "S_Freq") & (df["Episode"] == episode)]["value"])[0]
     freq_sum = frequency.sum()
-    freq_actions = frequency.sum(axis=0) / freq_sum
+    size = int(sqrt(len(frequency)))
     freq_states = frequency.sum(axis=1) / freq_sum
-    freq_states = np.reshape(freq_states, (4, 4))
+    freq_states = np.reshape(freq_states, (size, size))
 
     ax = sns.heatmap(
         freq_states * 100,
@@ -244,3 +245,24 @@ def chart_lake_frequencies(
     ax.set_title(title)
     plt.suptitle(suptitle)
     save_to_file(plt, suptitle + " " + title, location)
+
+
+def chart_lake_frequencies_test(
+    episode_stats, episode, title, suptitle="Lake State Visit Frequencies", location=lake_location
+):
+    df = pd.melt(pd.DataFrame(episode_stats), "Episode")
+    frequency = np.array(df[(df["variable"] == "S_Freq") & (df["Episode"] == episode)]["value"])[0]
+    freq_sum = frequency.sum()
+    freq_states = frequency.sum(axis=1) / freq_sum
+    policy = np.array(df[(df["variable"] == "Policy") & (df["Episode"] == episode)]["value"])[0]
+
+    lake_plot_policy_and_value(
+        policy,
+        freq_states,
+        title,
+        suptitle,
+        red_direction=False,
+        location=lake_location,
+        show_policy=True,
+        value_label="Visit Frequency (Percent)",
+    )

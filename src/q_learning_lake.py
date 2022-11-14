@@ -23,6 +23,7 @@ from q_learning import (
     get_terminal_states,
     lake_location,
 )
+from vi_pi_functions import lake_plot_policy_and_value
 
 ###############################
 # LAKE
@@ -39,9 +40,7 @@ n_iter = 5000000
 alpha_decay = 0.999999
 epsilon_decay = 0.999999
 
-title_settings = (
-    f"(Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
-)
+title_settings = f"(Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay} Map:{map_name})"
 
 ql = mdp.QLearningEpisodic(
     P,
@@ -65,7 +64,7 @@ chart_lines(
     episode_stats,
     ["episode_reward", "Max V"],
     title_settings,
-    "Test",
+    "Lake Q Reward and Max V",
     lake_location,
     review_frequency=100,
     x="Episode",
@@ -75,7 +74,7 @@ chart_lines(
     episode_stats,
     ["Error"],
     title_settings,
-    "Test Error",
+    "Lake Q Error",
     lake_location,
     review_frequency=100,
     x="Episode",
@@ -85,17 +84,45 @@ chart_lines(
     episode_stats,
     ["Iterations per Episode"],
     title_settings,
-    "Test Episode Iterations",
+    "Lake Q Iterations per Episode",
     lake_location,
     review_frequency=100,
     x="Episode",
 )
 
 
+suptitle = f"Lake State Visits - {map_name} Map"
 episode = episode_stats[-2]["Episode"]
 freq_title_settings = f"Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
-chart_lake_frequencies(episode_stats, episode, freq_title_settings)
+chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=suptitle)
 
 episode = 2000
 freq_title_settings = f"Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
-chart_lake_frequencies(episode_stats, episode, freq_title_settings)
+chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=suptitle)
+
+
+def chart_lake_frequencies_test(
+    episode_stats, episode, title, suptitle="Lake State Visit Frequencies", location=lake_location
+):
+    df = pd.melt(pd.DataFrame(episode_stats), "Episode")
+    frequency = np.array(df[(df["variable"] == "S_Freq") & (df["Episode"] == episode)]["value"])[0]
+    freq_sum = frequency.sum()
+    freq_states = frequency.sum(axis=1) / freq_sum
+    policy = np.array(df[(df["variable"] == "Policy") & (df["Episode"] == episode)]["value"])[0]
+
+    lake_plot_policy_and_value(
+        policy,
+        freq_states,
+        title,
+        suptitle,
+        red_direction=False,
+        location=lake_location,
+        show_policy=True,
+        value_label="Visit Frequency (Percent)",
+    )
+
+
+suptitle = f"Lake State Visits ({map_name} Map)"
+episode = episode_stats[-2]["Episode"]
+freq_title_settings = f"Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
+chart_lake_frequencies_test(episode_stats, episode, freq_title_settings, suptitle=suptitle)
