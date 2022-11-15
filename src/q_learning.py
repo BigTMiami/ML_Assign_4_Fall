@@ -25,7 +25,8 @@ forest_actions = 2
 
 def get_threshold(info, threshold, threshold_column, x, y, value_window=30, pct_window=10):
     df = pd.melt(pd.DataFrame(info), y)
-    dfp = df[df["variable"] == x].copy()
+    # dfp = df[df["variable"] == x].copy()
+    dfp = df[df["variable"] == x].copy().groupby(y)["value"].mean().to_frame().reset_index()
     dfp["moving_avg"] = dfp["value"].rolling(value_window).mean()
     dfp["percent_chg"] = dfp["moving_avg"].pct_change().rolling(pct_window).mean()
     min_column_value = dfp[threshold_column].dropna().min()
@@ -196,6 +197,10 @@ def forest_q(
     alpha_decay=0.99,
     epsilon_decay=0.99,
     repeat_count=5,
+    stat_frequency=1000,
+    reward_threshold=0.0004,
+    value_window=1000,
+    pct_window=1000,
 ):
 
     P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
@@ -215,7 +220,17 @@ def forest_q(
         ql_info = ql.run()
         ql_all += ql_info
 
-    title = f"(epsilon_decay:{epsilon_decay} alpha_decay:{alpha_decay})"
+    reward_threshold_iteration = get_threshold(
+        ql_all,
+        reward_threshold,
+        "percent_chg",
+        "running_reward",
+        "Iteration",
+        value_window=value_window,
+        pct_window=pct_window,
+    )
+
+    title = f"Gamma:{gamma}, E Dec:{epsilon_decay}, A Dec:{alpha_decay}"
 
     chart_lines(
         ql_all,
@@ -223,7 +238,8 @@ def forest_q(
         title,
         "Q Forest Epsilon, Alpha",
         forest_location,
-        iter_review_frequency=10000,
+        review_frequency=10000,
+        threshold=reward_threshold_iteration,
     )
 
     chart_lines(
@@ -232,7 +248,8 @@ def forest_q(
         title,
         "Q Forest Max V, V[0]",
         forest_location,
-        iter_review_frequency=10000,
+        review_frequency=10000,
+        threshold=reward_threshold_iteration,
     )
 
     chart_lines(
@@ -241,10 +258,32 @@ def forest_q(
         title,
         "Q Forest Running Reward",
         forest_location,
-        iter_review_frequency=1000,
+        review_frequency=10000,
+        threshold=reward_threshold_iteration,
     )
 
     chart_forest_frequencies(ql_all, title)
+
+    if reward_threshold_iteration is not None:
+        save_type = "Threshold"
+        save_index = None
+        for index, value in enumerate(ql_all):
+            if value["Iteration"] == reward_threshold_iteration:
+                break
+        save_index = index
+    else:
+        save_type = "Final"
+        save_index = -2
+
+    save_stats = ql_all[save_index]
+    for item, value in save_stats.items():
+        if isinstance(value, np.ndarray):
+            save_stats[item] = value.tolist()
+        elif isinstance(value, np.int64):
+            save_stats[item] = int(value)
+    save_stats["alpha_decay"] = alpha_decay
+    save_stats["epsilon_decay"] = epsilon_decay
+    save_json_to_file(save_stats, f"Q Forest {save_type} {title}", forest_location)
 
     return ql_all
 
@@ -289,12 +328,11 @@ def q_lake_run(
     value_window=50,
     pct_window=30,
 ):
-    map_used = maps[map_name]
     lake_map = maps[map_name]
     P, R = example.openai("FrozenLake-v1", desc=lake_map, is_slippery=is_slippery)
 
     terminal_states = get_terminal_states(lake_map)
-    title_settings = f"Map:{map_name}, Gamma:{gamma}, E Dec:{epsilon_decay}, Alpha:{alpha}, A Decay:{alpha_decay}, {'Is' if is_slippery else 'Not'} Slippery"
+    title_settings = f"Map:{map_name}, Gamma:{gamma}, E Dec:{epsilon_decay}, Alpha:{alpha}, A Dec:{alpha_decay}, {'Is' if is_slippery else 'Not'} Slippery"
 
     ql = mdp.QLearningEpisodic(
         P,
@@ -388,14 +426,16 @@ def q_lake_run(
         save_type = "Final"
         save_index = -2
 
-    threshold_stats = episode_stats[save_index]
-    for item, value in threshold_stats.items():
+    save_stats = episode_stats[save_index]
+    for item, value in save_stats.items():
         if isinstance(value, np.ndarray):
-            threshold_stats[item] = value.tolist()
-    threshold_stats["alpha_decay"] = alpha_decay
-    threshold_stats["epsilon_decay"] = epsilon_decay
-    threshold_stats["map_name"] = map_name
-    threshold_stats["is_slippery"] = is_slippery
-    save_json_to_file(threshold_stats, f"Q Lake {save_type} {title_settings}", lake_location)
+            save_stats[item] = value.tolist()
+        elif isinstance(value, np.int64):
+            save_stats[item] = int(value)
+    save_stats["alpha_decay"] = alpha_decay
+    save_stats["epsilon_decay"] = epsilon_decay
+    save_stats["map_name"] = map_name
+    save_stats["is_slippery"] = is_slippery
+    save_json_to_file(save_stats, f"Q Lake {save_type} {title_settings}", lake_location)
 
     return episode_stats
