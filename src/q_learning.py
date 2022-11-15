@@ -282,6 +282,7 @@ def q_lake_run(
     n_iter,
     alpha_decay,
     epsilon_decay,
+    alpha=0.1,
     is_slippery=True,
     episode_stat_frequency=1000,
     reward_threshold=0.01,
@@ -293,7 +294,7 @@ def q_lake_run(
     P, R = example.openai("FrozenLake-v1", desc=lake_map, is_slippery=is_slippery)
 
     terminal_states = get_terminal_states(lake_map)
-    title_settings = f"(Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay}, Map:{map_name})"
+    title_settings = f"Map:{map_name}, Gamma:{gamma}, E Dec:{epsilon_decay}, Alpha:{alpha}, A Decay:{alpha_decay}, {'Is' if is_slippery else 'Not'} Slippery"
 
     ql = mdp.QLearningEpisodic(
         P,
@@ -304,6 +305,7 @@ def q_lake_run(
         alpha_decay=alpha_decay,
         epsilon_decay=epsilon_decay,
         episode_stat_frequency=episode_stat_frequency,
+        alpha=alpha,
     )
 
     episode_stats = ql.run()
@@ -362,19 +364,18 @@ def q_lake_run(
         threshold=reward_threshold_episode,
     )
 
-    suptitle = f"Q Lake State Visits - {map_name} Map"
     episode = episode_stats[-2]["Episode"]
-    freq_title_settings = f"Last Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
-    chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=suptitle)
+    suptitle = f"Q Lake State Visits Last Episode: {episode}"
+    chart_lake_frequencies(episode_stats, episode, title_settings, suptitle=suptitle)
 
     if reward_threshold_episode is not None:
         episode = reward_threshold_episode
-        freq_title_settings = f"Threshold Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
-        chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=suptitle)
+        suptitle = f"Q Lake State Visits Threshold Episode: {episode}"
+        chart_lake_frequencies(episode_stats, episode, title_settings, suptitle=suptitle)
 
     episode = 2000
-    freq_title_settings = f"Beginning Episode: {episode} (Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay})"
-    chart_lake_frequencies(episode_stats, episode, freq_title_settings, suptitle=suptitle)
+    suptitle = f"Q Lake State Visits Begining Episode: {episode}"
+    chart_lake_frequencies(episode_stats, episode, title_settings, suptitle=suptitle)
 
     if reward_threshold_episode is not None:
         save_type = "Threshold"
