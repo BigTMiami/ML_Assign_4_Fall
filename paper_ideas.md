@@ -68,3 +68,11 @@ Q learning is sensitive to
 
 Add reward threshold to forest, along with error chart
 
+Todo
+    Make 16 X 16 Large Map (256 states)
+        Large (Few Holes)
+        Large Hard (More Holes)
+    Shrink title on chart lines
+    Create standard title heading
+    Explore Increasing Alpha Init to allow strong learning 
+    

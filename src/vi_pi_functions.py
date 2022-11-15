@@ -388,7 +388,7 @@ def lake_plot_policy_and_value(
     )
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.set_title(title)
+    ax.set_title(title, fontdict={"fontsize": 8, "fontweight": "light"})
     if save_chart:
         plt.suptitle(suptitle)
         save_to_file(plt, suptitle + " " + title, location)

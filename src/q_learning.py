@@ -53,13 +53,14 @@ def chart_lines(
     if threshold is not None:
         plt.axvline(x=threshold, color="r", linestyle="-")
         ymin, ymax = ax1.get_ylim()
-        text_y = (ymax - ymin) / 2
+        text_y = ((ymax - ymin) / 2) + ymin
         xmin, xmax = ax1.get_xlim()
         text_x_space = (xmax - xmin) * 0.05
         plt.text(threshold + text_x_space, text_y, "Convergence Threshold", color="r")
 
     # ax1.set_xlabel("Iterations")
-    ax1.set_title(title)
+    ax1.set_title(title, fontdict={"fontsize": 8, "fontweight": "light"})
+
     plt.suptitle(suptitle)
     save_to_file(plt, suptitle + " " + title, location)
 
@@ -292,7 +293,7 @@ def q_lake_run(
     P, R = example.openai("FrozenLake-v1", desc=lake_map, is_slippery=is_slippery)
 
     terminal_states = get_terminal_states(lake_map)
-    title_settings = f"(Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay} Map:{map_name})"
+    title_settings = f"(Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery, E Decay:{epsilon_decay}, Map:{map_name})"
 
     ql = mdp.QLearningEpisodic(
         P,
@@ -305,7 +306,7 @@ def q_lake_run(
         episode_stat_frequency=episode_stat_frequency,
     )
 
-    ql_info, episode_stats = ql.run()
+    episode_stats = ql.run()
 
     reward_threshold_episode = get_threshold(
         episode_stats,
