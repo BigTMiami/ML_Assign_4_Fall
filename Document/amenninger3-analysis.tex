@@ -1,0 +1,160 @@
+\def\year{2021}\relax
+%File: formatting-instructions-latex-2021.tex
+%release 2021.1
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+\usepackage{aaai21}  % DO NOT CHANGE THIS
+\usepackage{times}  % DO NOT CHANGE THIS
+\usepackage{helvet} % DO NOT CHANGE THIS
+\usepackage{courier}  % DO NOT CHANGE THIS
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+
+% ADJUSTED BY AFM ----------------------------------------------------------
+\usepackage{amsmath} % ENTERED BY AFM
+\usepackage{subcaption}
+\usepackage[table,usenames,dvipsnames]{xcolor}
+
+
+
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\usepackage{caption} % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\frenchspacing  % DO NOT CHANGE THIS
+\setlength{\pdfpagewidth}{8.5in}  % DO NOT CHANGE THIS
+\setlength{\pdfpageheight}{11in}  % DO NOT CHANGE THIS
+\nocopyright
+%PDF Info Is REQUIRED.
+% For /Author, add all authors within the parentheses, separated by commas. No accents or commands.
+% For /Title, add Title in Mixed Case. No accents or commands. Retain the parentheses.
+\pdfinfo{
+/Title (ML Assignment 4)
+/Author (Anthony Menninger)
+/TemplateVersion (2021.1)
+} %Leave this
+% /Title ()
+% Put your actual complete title (no codes, scripts, shortcuts, or LaTeX commands) within the parentheses in mixed case
+% Leave the space between \Title and the beginning parenthesis alone
+% /Author ()
+% Put your actual complete list of authors (no codes, scripts, shortcuts, or LaTeX commands) within the parentheses in mixed case.
+% Each author should be only by a comma. If the name contains accents, remove them. If there are any LaTeX commands,
+% remove them.
+
+% DISALLOWED PACKAGES
+% \usepackage{authblk} -- This package is specifically forbidden
+% \usepackage{balance} -- This package is specifically forbidden
+% \usepackage{color (if used in text)
+% \usepackage{CJK} -- This package is specifically forbidden
+% \usepackage{float} -- This package is specifically forbidden
+% \usepackage{flushend} -- This package is specifically forbidden
+% \usepackage{fontenc} -- This package is specifically forbidden
+% \usepackage{fullpage} -- This package is specifically forbidden
+% \usepackage{geometry} -- This package is specifically forbidden
+% \usepackage{grffile} -- This package is specifically forbidden
+% \usepackage{hyperref} -- This package is specifically forbidden
+% \usepackage{navigator} -- This package is specifically forbidden
+% (or any other package that embeds links such as navigator or hyperref)
+% \indentfirst} -- This package is specifically forbidden
+% \layout} -- This package is specifically forbidden
+% \multicol} -- This package is specifically forbidden
+% \nameref} -- This package is specifically forbidden
+% \usepackage{savetrees} -- This package is specifically forbidden
+% \usepackage{setspace} -- This package is specifically forbidden
+% \usepackage{stfloats} -- This package is specifically forbidden
+% \usepackage{tabu} -- This package is specifically forbidden
+% \usepackage{titlesec} -- This package is specifically forbidden
+% \usepackage{tocbibind} -- This package is specifically forbidden
+% \usepackage{ulem} -- This package is specifically forbidden
+% \usepackage{wrapfig} -- This package is specifically forbidden
+% DISALLOWED COMMANDS
+% \nocopyright -- Your paper will not be published if you use this command
+% \addtolength -- This command may not be used
+% \balance -- This command may not be used
+% \baselinestretch -- Your paper will not be published if you use this command
+% \clearpage -- No page breaks of any kind may be used for the final version of your paper
+% \columnsep -- This command may not be used
+% \newpage -- No page breaks of any kind may be used for the final version of your paper
+% \pagebreak -- No page breaks of any kind may be used for the final version of your paperr
+% \pagestyle -- This command may not be used
+% \tiny -- This is not an acceptable font size.
+% \vspace{- -- No negative value may be used in proximity of a caption, figure, table, section, subsection, subsubsection, or reference
+% \vskip{- -- No negative value may be used to alter spacing above or below a caption, figure, table, section, subsection, subsubsection, or reference
+
+\setcounter{secnumdepth}{0} %May be changed to 1 or 2 if section numbers are desired.
+
+% The file aaai21.sty is the style file for AAAI Press
+% proceedings, working notes, and technical reports.
+%
+
+% Title
+
+% Your title must be in mixed case, not sentence case.
+% That means all verbs (including short verbs like be, is, using,and go),
+% nouns, adverbs, adjectives should be capitalized, including both words in hyphenated terms, while
+% articles, conjunctions, and prepositions are lower case unless they
+% directly follow a colon or long dash
+
+
+%Example, Single Author, ->> remove \iffalse,\fi and place them surrounding AAAI title to use it
+\title{
+Machine Learning - CS 7641
+Assignment 4
+	
+}
+\author {
+    % Author
+    Anthony Menninger \\
+}
+
+\affiliations{
+    Georgia Tech OMSCS Program \\
+    amenninger3\\
+    tmenninger@gatech.edu
+
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This paper explores Markov Decision Processes through the use of Value Iteration, Policy Iteration and Q Learning.  It looks at a simple "Forest" MDP and a larger Frozen Lake "Grid World".
+\end{abstract}
+
+\section{Problem Introduction}
+
+A key element in both Markov Decision Processes (MDPs) is the idea of a discount, which is often referred to as \textbf{\emph{Gamma ($\gamma$)}}.  This discount factor, between 1 and 0, allows solutions for infinite MDPs by discounting future value by \textbf{\emph{Gamma}} for each step into the future.  In an infinite activity, this ends up valuing future value at $ \frac{1}{1- \gamma}$.  Gamma close to 0 creates a very close horizon where only immediate rewards are maximized, while Gamma close to 1 creates a long horizon, where maximizing long term reward is emphasized.  As well be seen, MDPs are very sensitive to this and small changes can create very different solutions.
+
+\subsection{Forest MDP}
+\textbf{\emph{Forest MDP}} is a simple MDP that models the value of a forest with respect to two actions that can be performed each year: \textbf{\emph{wait}} or \textbf{\emph{cut}}.  There is a stochastic element of forest fires that occur with probability \textbf{\emph{p}}.  Each year is a state, with a max of \textbf{\emph{S}} years / states.  Cutting deterministically transitions to the initial state,  \textbf{\emph{state=0}} and provides a \textbf{\emph{cutting reward}}.  Waiting transitions to the next year, or if in the max state, remains there.  Forest fires provide a stochastic element, with a fire transitioning back to the initial state.  A \textbf{\emph{waiting reward}} only occurs in the max state, \textbf{\emph{state=S}}.  This is a continual MDP, with no terminal or absorbing states. 
+
+The base setup for \textbf{\emph{Forest}} is seven years (\textbf{\emph{S=7}}), a 10\% chance of forest fire (\textbf{\emph{p=0.1}}), a cutting reward of 2 (\textbf{\emph{cutting reward=2}}) and a waiting reward of 4 (\textbf{\emph{waiting reward = 4}}).
+
+In the context of MDP's, each state has an action that maximizes expected value and the set of maximizing actions for all states is called a \textbf{\emph{policy}}.  This policy can be examined to determine what rational actors are likely going to do. 
+
+There are several very interesting aspects to this problem.  \textbf{\emph{Forest MDP}} models a key choice being made today around ecology and the environment.  What are the rewards needed to keep forests around?  How do maximizing actions (\textbf{\emph{policy}}) change as the chance of forest fires increase?  How does the length of the considered horizon (\textbf{\emph{Gamma discount}}) influence expected outcomes.  
+
+This also highlights a key challenge in MDP's and Reinforcement Learning, which is understanding rewards and setting them appropriately.  \textbf{\emph{Forest MDP}}  allows modeling of different situations to inform the construction of public policy for governments, NGO's and corporations.  The \textbf{\emph{cutting reward}} might be clearly modeled using expected timber value, but other types of reward may want to be considered in the \textbf{\emph{waiting reward}}, such as carbon reduction and maintenance of ecological diversity.  This MDP can be used to model economic rewards and penalties to compel desired outcomes, such as a carbon tax that would reduce the value of the \textbf{\emph{cutting reward}}.
+
+\section{Forest MDP Value Iteration and Policy Iteration}
+
+\section{Lake MDP Value Iteration and Policy Iteration}
+
+\section{Forest MDP Q Learning}
+
+\section{Lake MDP Q Learning}
+
+\section{Summary}
+
+\section{References}
+\begin{tabular}{l p{2.75in}}
+\\
+1 & Markov Decision Processes (MDP) Toolbox, https://miat.inrae.fr/MDPtoolbox/ Accessed: 11/1/2022.
+\\
+2 & Markov Decision Process (MDP) Toolbox for Python, https://github.com/sawcordwell/pymdptoolbox: Accessed: 11/1/2022.
+\\
+3 & hiive Fork: Markov Decision Process (MDP) Toolbox for Python, https://github.com/hiive/hiivemdptoolbox: Accessed: 11/1/2022.
+\\
+4 & Brockman, G. et al., 2016. Openai gym.
+\end{tabular}
+\end{document}
