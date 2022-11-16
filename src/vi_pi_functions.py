@@ -285,12 +285,13 @@ def compare_vi_pi(
     return
 
 
-def map_to_array(map, size, as_int=True):
+def map_to_array(map, as_int=True):
     map_array = []
     for row in map:
         for letter in row:
             map_array.append(letter)
     size = get_size(map_array)
+    print(f"size:{size} map_array:{map_array}")
     map_array = np.reshape(map_array, (size, size))
 
     if as_int:
@@ -324,7 +325,7 @@ def lake_plot_policy(
 ):
     direction_color = "red" if red_direction else "orange"
     pp = lake_policy_as_string(policy)
-    map_array = map_to_array(map_used, 8)
+    map_array = map_to_array(map_used)
     cp = sns.color_palette(["white", "green", "blue"])
     ax = sns.heatmap(
         map_array,
@@ -423,14 +424,19 @@ def compare_two_policies_and_values(policy_1, policy_2, value_1, value_2, title,
     )
 
 
-def compare_policy_iterations(info, suptitle, map_used, max_iteration=None):
+def compare_policy_iterations(info, title, suptitle, max_iteration=None):
     max_iteration = max_iteration if max_iteration is not None else len(info)
     prev_policy = info[0]["Policy"]
+    prev_value = info[0]["Value"]
     for i in range(1, max_iteration):
         curr_policy = info[i]["Policy"]
-        title = f"{i-1} vs {i}"
-        compare_two_policies(prev_policy, curr_policy, title, suptitle, map_used)
+        curr_value = info[i]["Value"]
+        adjusted_title = f"{i-1} vs {i} {title}"
+        compare_two_policies_and_values(
+            prev_policy, curr_policy, prev_value, curr_value, adjusted_title, suptitle
+        )
         prev_policy = curr_policy
+        prev_value = curr_value
 
 
 def value_max_min(info):
@@ -482,7 +488,7 @@ def plot_policy_value_iterations(
             )
             curr_ax += 1
     if not seperate_charts:
-        plt.suptitle(suptitle)
+        plt.suptitle(f"{suptitle} ({title_settings})")
         title = f"{title_settings} Iter {iters_to_use[0]} to {iters_to_use[-1]} "
         save_to_file(plt, suptitle + " " + title, lake_location)
 
@@ -531,7 +537,51 @@ def plot_gamma_iterations(gamma_values, suptitle, map_name, is_slippery, model_t
 
     plt.suptitle(suptitle + " " + title_settings)
     title = f"gamma {gamma_values[0]} to {gamma_values[-1]} "
-    save_to_file(plt, suptitle + " " + title, lake_location)
+    save_to_file(plt, suptitle + " " + title_settings + " " + title, lake_location)
+
+
+def plot_e_stop_values(estop_values, suptitle, gamma, map_name, is_slippery, show_policy):
+    map_used = maps[map_name]
+
+    P, R = example.openai("FrozenLake-v1", desc=map_used, is_slippery=is_slippery)
+    title_settings = f"{map_name} Map, Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery"
+
+    estop_info = []
+    for estop in estop_values:
+        model = mdp.ValueIteration(P, R, gamma, epsilon=estop)
+
+        info = model.run()
+        estop_info.append(info[-1])
+
+    fig, ax = plt.subplots(1, len(estop_values), figsize=(3 * len(estop_values), 4))
+    curr_ax = 0
+    last_ax = len(estop_values) - 1
+    vmin, vmax = value_max_min(estop_info)
+
+    for estop, info in zip(estop_values, estop_info):
+        policy = info["Policy"]
+        value = info["Value"]
+        iteration = info["Iteration"]
+        title = f"E Stop {estop} - Iter{iteration}"
+        cbar = curr_ax == last_ax
+        cbar_ax = None
+        lake_plot_policy_and_value(
+            policy,
+            value,
+            title,
+            suptitle=suptitle,
+            vmin=vmin,
+            vmax=vmax,
+            cbar=cbar,
+            ax=ax[curr_ax],
+            show_policy=show_policy,
+            cbar_ax=cbar_ax,
+        )
+        curr_ax += 1
+
+    plt.suptitle(suptitle + " " + title_settings)
+    title = f"gamma {estop_values[0]} to {estop_values[-1]} "
+    save_to_file(plt, suptitle + " " + title_settings + " " + title, lake_location)
 
 
 def review_stopping_critieria(vi_info, vi, S):

@@ -19,6 +19,7 @@ from vi_pi_functions import (
     lake_location,
     lake_plot_policy_and_value,
     percent_fire_review,
+    plot_e_stop_values,
     plot_gamma_iterations,
     plot_policy_value_iterations,
 )
@@ -74,9 +75,13 @@ vi_info = vi.run()
 pi = mdp.PolicyIteration(P, R, gamma, max_iter=100)
 pi_info = pi.run()
 
-lake_plot_policy_and_value(vi.policy, vi.V, title_settings, suptitle="Lake VI", show_policy=True)
+lake_plot_policy_and_value(
+    vi.policy, vi.V, title_settings, suptitle="Lake VI Final Policy and Value", show_policy=True
+)
 
-lake_plot_policy_and_value(pi.policy, pi.V, title_settings, suptitle="Lake PI", show_policy=True)
+lake_plot_policy_and_value(
+    pi.policy, pi.V, title_settings, suptitle="Lake PI Final Policy and Value", show_policy=True
+)
 
 compare_two_policies_and_values(
     pi_info[-1]["Policy"],
@@ -84,7 +89,7 @@ compare_two_policies_and_values(
     pi_info[-1]["Value"],
     vi_info[-1]["Value"],
     title_settings,
-    "Lake PI and VI Differences",
+    "Lake PI and VI Final Differences",
 )
 
 chart_reward_vs_error(vi_info, title_settings, "Lake VI Reward and Error", location=lake_location)
@@ -99,14 +104,26 @@ plot_gamma_iterations(
     show_policy=True,
 )
 
-compare_policy_iterations(vi_info, "Lake VI Policy Comparison", map_used)
-compare_policy_iterations(pi_info, "Lake PI Policy Comparison", map_used, max_iteration=12)
+plot_e_stop_values(
+    [0.01, 0.001, 0.0001], "Lake VI E Stop Comparison", gamma, map_name, is_slippery, True
+)
+
+compare_policy_iterations(vi_info, title_settings, "Lake VI Policy Comparison")
+compare_policy_iterations(pi_info, title_settings, "Lake PI Policy Comparison", max_iteration=12)
 
 plot_policy_value_iterations(
-    pi_info, "Lake PI", map_used, seperate_charts=False, iters_to_use=[8, 9, 10, 11]
+    pi_info,
+    "Lake PI Policy Iterations",
+    title_settings,
+    seperate_charts=False,
+    iters_to_use=[8, 9, 10, 11],
 )
 plot_policy_value_iterations(
-    vi_info, "Lake VI", map_used, seperate_charts=False, iters_to_use=[0, 3, 6, 9, 13]
+    vi_info,
+    "Lake VI Policy Iterations",
+    title_settings,
+    seperate_charts=False,
+    iters_to_use=[0, 3, 6, 9, 13],
 )
 
 ###############################
@@ -128,9 +145,13 @@ vi_info = vi.run()
 pi = mdp.PolicyIteration(P, R, gamma, max_iter=100)
 pi_info = pi.run()
 
-lake_plot_policy_and_value(vi.policy, vi.V, title_settings, suptitle="Lake VI", show_policy=True)
+lake_plot_policy_and_value(
+    vi.policy, vi.V, title_settings, suptitle="Lake VI Final Policy and Value", show_policy=True
+)
 
-lake_plot_policy_and_value(pi.policy, pi.V, title_settings, suptitle="Lake PI", show_policy=True)
+lake_plot_policy_and_value(
+    pi.policy, pi.V, title_settings, suptitle="Lake PI Final Policy and Value", show_policy=True
+)
 
 compare_two_policies_and_values(
     pi_info[-1]["Policy"],
@@ -138,7 +159,7 @@ compare_two_policies_and_values(
     pi_info[-1]["Value"],
     vi_info[-1]["Value"],
     title_settings,
-    "Lake PI and VI Differences",
+    "Lake PI and VI Final Differences",
 )
 
 chart_reward_vs_error(vi_info, title_settings, "Lake VI Reward and Error", location=lake_location)
@@ -153,12 +174,24 @@ plot_gamma_iterations(
     show_policy=True,
 )
 
-compare_policy_iterations(vi_info, "Lake VI Policy Comparison", map_used)
-compare_policy_iterations(pi_info, "Lake PI Policy Comparison", map_used, max_iteration=12)
+plot_e_stop_values(
+    [0.01, 0.001, 0.0001], "Lake VI E Stop Comparison", gamma, map_name, is_slippery, True
+)
+
+compare_policy_iterations(vi_info, title_settings, "Lake VI Policy Comparison")
+compare_policy_iterations(pi_info, title_settings, "Lake PI Policy Comparison")
 
 plot_policy_value_iterations(
-    pi_info, "Lake PI", map_used, seperate_charts=False, iters_to_use=[8, 9, 10, 11]
+    pi_info,
+    "Lake PI Policy Iterations",
+    title_settings,
+    seperate_charts=False,
+    iters_to_use=[1, 5, 9, 16],
 )
 plot_policy_value_iterations(
-    vi_info, "Lake VI", map_used, seperate_charts=False, iters_to_use=[0, 3, 6, 9, 13]
+    vi_info,
+    "Lake VI Policy Iterations",
+    title_settings,
+    seperate_charts=False,
+    iters_to_use=[0, 18, 34, 52],
 )

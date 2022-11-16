@@ -75,4 +75,5 @@ Todo
     Set up doc
     Try Large Hard (More Holes) 
 
-    
+    Need to finish lake vi pi
+    check e-stop lake comparison for vi - pi
