@@ -69,10 +69,10 @@ Q learning is sensitive to
 Add reward threshold to forest, along with error chart
 
 Todo
-    Create threshold on Forest
-    Adjust forest graphs to match Lake
+    final vi \ pi 
+        use new large Lake
+    final comparison tables for vi, pi, Q
     Set up doc
-    rerun vi \ pi with new large Lake
     Try Large Hard (More Holes) 
 
     

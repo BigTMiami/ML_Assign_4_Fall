@@ -443,7 +443,7 @@ def value_max_min(info):
 
 
 def plot_policy_value_iterations(
-    info, suptitle, map_used, iters_to_use=None, seperate_charts=True
+    info, suptitle, title_settings, iters_to_use=None, seperate_charts=True
 ):
     iters_to_use = range(1, len(info)) if iters_to_use is None else iters_to_use
 
@@ -451,7 +451,7 @@ def plot_policy_value_iterations(
         fig, ax = plt.subplots(1, len(iters_to_use), figsize=(3 * len(iters_to_use), 4))
         curr_ax = 0
         last_ax = len(iters_to_use) - 1
-        vmin, vmax = value_max_min(pi_info)
+        vmin, vmax = value_max_min(info)
 
     for i in iters_to_use:
         iteration = info[i]["Iteration"]
@@ -463,7 +463,6 @@ def plot_policy_value_iterations(
                 policy,
                 value,
                 title,
-                map_used,
                 suptitle=suptitle,
                 vmin=None,
                 vmax=None,
@@ -475,7 +474,6 @@ def plot_policy_value_iterations(
                 policy,
                 value,
                 title,
-                map_used,
                 suptitle=suptitle,
                 vmin=vmin,
                 vmax=vmax,
@@ -485,11 +483,11 @@ def plot_policy_value_iterations(
             curr_ax += 1
     if not seperate_charts:
         plt.suptitle(suptitle)
-        title = f"Iteration {iters_to_use[0]} to {iters_to_use[-1]} "
+        title = f"{title_settings} Iter {iters_to_use[0]} to {iters_to_use[-1]} "
         save_to_file(plt, suptitle + " " + title, lake_location)
 
 
-def plot_gamma_iterations(gamma_values, suptitle, map_name, is_slippery, model_type):
+def plot_gamma_iterations(gamma_values, suptitle, map_name, is_slippery, model_type, show_policy):
     map_used = maps[map_name]
 
     P, R = example.openai("FrozenLake-v1", desc=map_used, is_slippery=is_slippery)
@@ -521,13 +519,12 @@ def plot_gamma_iterations(gamma_values, suptitle, map_name, is_slippery, model_t
             policy,
             value,
             title,
-            map_used,
             suptitle=suptitle,
             vmin=vmin,
             vmax=vmax,
             cbar=cbar,
             ax=ax[curr_ax],
-            show_policy=False,
+            show_policy=show_policy,
             cbar_ax=cbar_ax,
         )
         curr_ax += 1

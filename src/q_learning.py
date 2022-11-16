@@ -18,8 +18,8 @@ from chart_util import save_json_to_file, save_to_file
 from maps import maps
 from vi_pi_functions import lake_plot_policy_and_value
 
-lake_location = "results/lake"
-forest_location = "results/forest"
+lake_q_location = "results/lake/qlearn"
+forest_q_location = "results/forest/qlearn"
 forest_actions = 2
 
 
@@ -66,7 +66,7 @@ def chart_lines(
     save_to_file(plt, suptitle + " " + title, location)
 
 
-def chart_forest_frequencies(ql_info, title, location=forest_location):
+def chart_forest_frequencies(ql_info, title, location=forest_q_location):
     df = pd.melt(pd.DataFrame(ql_info), "Iteration")
     df = df[df["Iteration"] % 10000 == 0]
 
@@ -97,6 +97,8 @@ def chart_forest_frequencies(ql_info, title, location=forest_location):
         wcs,
         cmap="flare",
         xticklabels=["Wait", "Cut"],
+        vmin=0,
+        vmax=100,
         cbar_kws={"format": "%.0f%%", "label": "Frequency Percent"},
     )
     ax.set_ylabel("Iteration (10000)")
@@ -112,6 +114,8 @@ def chart_forest_frequencies(ql_info, title, location=forest_location):
         sfs,
         cmap="flare",
         xticklabels=[0, 1, 2, 3, 4, 5, 6],
+        vmin=0,
+        vmax=100,
         cbar_kws={"format": "%.0f%%", "label": "Frequency Percent"},
     )
     ax.set_ylabel("Iteration (10000)")
@@ -123,7 +127,7 @@ def chart_forest_frequencies(ql_info, title, location=forest_location):
 
 
 def reachable_forest_percentages(
-    epsilon_values=[0.1, 0.5, 1.0], p=0.1, S=7, location=forest_location
+    epsilon_values=[0.1, 0.5, 1.0], p=0.1, S=7, location=forest_q_location
 ):
     wait_policy = True
     wait_state_policy_percentage = 1.0 if wait_policy else 0.0
@@ -201,6 +205,7 @@ def forest_q(
     reward_threshold=0.0004,
     value_window=1000,
     pct_window=1000,
+    location=forest_q_location,
 ):
 
     P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
@@ -237,7 +242,7 @@ def forest_q(
         ["Epsilon", "Alpha"],
         title,
         "Q Forest Epsilon, Alpha",
-        forest_location,
+        location,
         review_frequency=10000,
         threshold=reward_threshold_iteration,
     )
@@ -247,7 +252,7 @@ def forest_q(
         ["Max V", "V[0]"],
         title,
         "Q Forest Max V, V[0]",
-        forest_location,
+        location,
         review_frequency=10000,
         threshold=reward_threshold_iteration,
     )
@@ -257,7 +262,7 @@ def forest_q(
         ["running_reward"],
         title,
         "Q Forest Running Reward",
-        forest_location,
+        location,
         review_frequency=10000,
         threshold=reward_threshold_iteration,
     )
@@ -283,7 +288,7 @@ def forest_q(
             save_stats[item] = int(value)
     save_stats["alpha_decay"] = alpha_decay
     save_stats["epsilon_decay"] = epsilon_decay
-    save_json_to_file(save_stats, f"Q Forest {save_type} {title}", forest_location)
+    save_json_to_file(save_stats, f"Q Forest {save_type} {title}", location)
 
     return ql_all
 
@@ -294,7 +299,11 @@ def get_terminal_states(lake_map):
 
 
 def chart_lake_frequencies(
-    episode_stats, episode, title, suptitle="Lake State Visit Frequencies", location=lake_location
+    episode_stats,
+    episode,
+    title,
+    suptitle="Lake State Visit Frequencies",
+    location=lake_q_location,
 ):
     df = pd.melt(pd.DataFrame(episode_stats), "Episode")
     frequency = np.array(df[(df["variable"] == "S_Freq") & (df["Episode"] == episode)]["value"])[0]
@@ -308,7 +317,7 @@ def chart_lake_frequencies(
         title,
         suptitle,
         red_direction=False,
-        location=lake_location,
+        location=location,
         show_policy=True,
         value_label="Visit Frequency (Percent)",
         save_json=False,
@@ -327,6 +336,7 @@ def q_lake_run(
     reward_threshold=0.01,
     value_window=50,
     pct_window=30,
+    location=lake_q_location,
 ):
     lake_map = maps[map_name]
     P, R = example.openai("FrozenLake-v1", desc=lake_map, is_slippery=is_slippery)
@@ -363,7 +373,7 @@ def q_lake_run(
         ["episode_reward"],
         title_settings,
         "Q Lake Reward",
-        lake_location,
+        location,
         review_frequency=100,
         x="Episode",
         threshold=reward_threshold_episode,
@@ -374,7 +384,7 @@ def q_lake_run(
         ["Error"],
         title_settings,
         "Q Lake Error",
-        lake_location,
+        location,
         review_frequency=100,
         x="Episode",
         threshold=reward_threshold_episode,
@@ -385,7 +395,7 @@ def q_lake_run(
         ["Iterations per Episode"],
         title_settings,
         "Q Lake Iterations per Episode",
-        lake_location,
+        location,
         review_frequency=100,
         x="Episode",
         threshold=reward_threshold_episode,
@@ -396,7 +406,7 @@ def q_lake_run(
         ["Epsilon", "Alpha"],
         title_settings,
         "Q Lake Epsilon and Alpha Decay",
-        lake_location,
+        location,
         review_frequency=100,
         x="Episode",
         threshold=reward_threshold_episode,
@@ -436,6 +446,6 @@ def q_lake_run(
     save_stats["epsilon_decay"] = epsilon_decay
     save_stats["map_name"] = map_name
     save_stats["is_slippery"] = is_slippery
-    save_json_to_file(save_stats, f"Q Lake {save_type} {title_settings}", lake_location)
+    save_json_to_file(save_stats, f"Q Lake {save_type} {title_settings}", location)
 
     return episode_stats
