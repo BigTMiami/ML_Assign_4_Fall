@@ -149,8 +149,8 @@ This MDP is interesting because it embodies a core Reinforcement Learning challe
 
 As described, this MDP is more likely to be "learned" in a setting using Q Learning to explore how agents use reinforcement learning to learn to navigate and behave in an unknown environment.
 
-\section{Value Iteration (VI) and Policy Iteration (PI)}
-In this section, we start with the \textbf{\emph{Forest MDP}}.   The VI and PI implementations used for this experiment started with the hiive MDP Toolbox [3], which was then "forked" to allow for modifications for this analysis.  Both VI and PI are model based algorithms, which means that the complete MDP is known and used for solving the problem.  This matches the \textbf{\emph{Forest MDP}} because it likely to be used to model different situations to see the impacts of different parameters.   
+\section{Forest MDP Value Iteration (VI) and Policy Iteration (PI)}
+We start with the \textbf{\emph{Forest MDP}}.   The VI and PI implementations used for this experiment started with the hiive MDP Toolbox [3], which was then "forked" to allow for modifications for this analysis.  Both VI and PI are model based algorithms, which means that the complete MDP is known and used for solving the problem.  This matches the \textbf{\emph{Forest MDP}} because it likely to be used to model different situations to see the impacts of different parameters.   
 
 Both VI an PI rely on the Bellman Equation, which can be represented in different ways as seen in  \textbf{Equation \ref{eq:bellman}} 
 \begin{equation} 
@@ -165,28 +165,90 @@ With Value Iteration, a sweep is performed of all states to update the Values us
 
 \textbf{Figure \ref{fig:forest_vi}} shows the VI solution for the default setup of the  \textbf{\emph{Lake MDP}} outlined in the introduction with the default VI setting of \emph{Error Threshold=0.01}.  First, we can see that it takes 49 iterations to solve.  Initially, the values for all states are low, but over time the values increase and shift from the high value end state towards the initial state.  As the values increase, the policy changes from cutting in almost all states to waiting in all states.  The final policy is reached in 7 iterations, but the final emph{Error Threshold} values aren't reached for much later.  Looking at the value of the final state, even though we only get a reward of 4 for waiting, our expected value in that state is almost 27 because with this policy we will stay there until a forest fire forces a transition. 
 
-
-
-
-
 \begin{figure}[!htb]
 \centering
 \includegraphics[width=2.75in, height=2.75in]{Figures/Forest_VI_Gamma_0_9_Value_vs_Iteration.png}
-\caption{Forest MDP Value Iteration (VI) with \emph{Error Threshold=0.01}. Red X indicates cut, otherwise the action is wait. }
+\caption{Forest MDP Value Iteration (VI) with \emph{Error Threshold=0.01}. Red X indicates the cut action, otherwise the action is wait. }
 \label{fig:forest_vi}
 \end{figure}
 
 
 \begin{figure}[!htb]
+ 	\begin{subfigure}[b]{0.45\textwidth}
+	\centering
+		\includegraphics[width=2.75in]{Figures/Chance_of_Forest_Fire_Review_Policy_Iteration_Gamma_0_9__Wait_Reward_4.png}
+		\caption{Discount of 0.9 and a wait reward of 4. }
+  	\end{subfigure}
+	\centering
+	 \begin{subfigure}[b]{0.235\textwidth}
+		\includegraphics[width=1.7in]{Figures/Chance_of_Forest_Fire_Review_Policy_Iteration_Gamma_0_9__Wait_Reward_8.png}
+		\caption{A wait reward of 8. }
+  	\end{subfigure}%
+	\begin{subfigure}[b]{0.235\textwidth}
+		\includegraphics[width=1.7in]{Figures/Chance_of_Forest_Fire_Review_Policy_Iteration_Gamma_0_95__Wait_Reward_4.png}
+		\caption{Discount of 0.95}
+  	\end{subfigure}
+\caption{Forest Values and Policy vs Chance of Forest Fire for a 10 year MDP}
+\label{fig:forest_fire_base}
+\end{figure}
+
+An important concern today is the increase in forest fires due to climate change.  \textbf{Figure \ref{fig:forest_fire_base} a} shows how increases in the chance of forest fires dramatically reduces the values associated with waiting and optimal policies more likely to increase cutting.  One way to reduce cutting is to increase the reward to wait.   \textbf{Figure \ref{fig:forest_fire_base} b} shows this, with the reward increased to 8.  We can see that cutting has been reduced vs the base, as well as dramatically increasing the values associated with states.  We can also increase the horizon of our valuation by increasing Gamma, the discount factor.  Increasing Gamma to 0.95 from 0.9, in \textbf{Figure \ref{fig:forest_fire_base} c}, also dramatically increases the value and reduces cutting.  This demonstrates the power of an MDP to explore different parameters to model outcomes and inform decision making.
+
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=2.75in, height=2.75in]{Figures/Forest_VI_Gamma_0_9_Reward_vs_Error.png}
+\caption{Forest MDP Value Iteration (VI) Error and Reward vs Iterations}
+\label{fig:forest_vi_reward_error}
+\end{figure}
+From a technical standpoint, we are often interested in how quickly and accurately an algorithm performs. \textbf{Figure \ref{fig:forest_vi_reward_error}} shows the Reward and Error per iteration of VI, with smoothly increasing value and decreasing error.  
+
+
+\begin{figure}[!htb]
+	\begin{subfigure}[b]{0.25\textwidth}
+	\centering
+		\includegraphics[width=1.75in]{Figures/Forest_MDP_Value_Iteration_vs_Policy_Iteration_num_States_vs_Iterations_Gamma_0_9.png}
+		\caption{Iterations vs \# of States}
+  	\end{subfigure}%
+	\begin{subfigure}[b]{0.25\textwidth}
+	\centering
+		\includegraphics[width=1.75in]{Figures/Forest_MDP_Value_Iteration_vs_Policy_Iteration_Gamma_vs_Iterations_num_of_States_10.png}
+		\caption{Iterations vs Gamma Values}
+  	\end{subfigure}%
+\caption{Forest MDP Iterations till Convergence}
+\label{fig:forest_states_vs_iterations}
+\end{figure}
+
+An important question is what impacts how many iterations it takes to converge?  \textbf{Figure \ref{fig:forest_states_vs_iterations} a} shows the number of iterations needed to solve the MDP as a function of the number of states.  When I first saw this, I thought it must be wrong!  The number of states in the MDP does not impact the number of iterations to solve for both VI and PI.  This triggered a lot of review and it turns out that the VI algorithm is using a very specific way to determine convergence.  
+
+\begin{equation} 
+\label{eq:vi_convergence}
+\begin{gathered}
+K = \left[ \frac{ log \left[ \frac{2R_{max} }{\epsilon (1 - \gamma)}\right] } {log(\frac{1} {gamma})}\right]\\
+if || V - V^* || < \epsilon \;\; then \;\; ||V^{\pi^i} - V^*||_\infty < 2 \epsilon \frac{\gamma}{(1 - \gamma)}
+\end{gathered}
+\end{equation}
+
+ The top of \textbf{Equation \ref{eq:vi_convergence}} shows how the number of iterations, K, can be solved for depending on the maximum reward, the error $\epsilon$ (not exploration yet) and the discount factor. It does not include any reference to state!  The bottom part can be solved along with K to determine the number of iterations to produce a policy that is $\epsilon$ accurate, which is the effective convergence in the MDP VI algorithm.  
+ 
+\textbf{Figure \ref{fig:forest_states_vs_iterations} b} shows VI's sensitivity to $gamma$, with increasing values requiring more iterations to solve.  Intuitively this makes sense with larger $gamma$ having a longer horizon, requiring many passes to reach the long term value.  The amount of time needed for increasing $gamma$ closely follows this chart and is not reproduced. 
+
+
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=2.75in, height=2.75in]{Figures/Forest_PI_Gamma_0_9_Value_vs_Iteration.png}
-\caption{Forest MDP Policy Iteration (PI) }
+\caption{Forest MDP Policy Iteration (PI). Red X indicates the cut action, otherwise the action is wait. }
 \label{fig:forest_pi}
 \end{figure}
 
-PI starts with an initial setup, in this case with all state values set to 0 and default policy actions.  It then solves for the policy using a linear solver and the initial Values.  With this new policy, it then recalculates all V values using the Bellman Equation \textbf{\ref{value_bellman}}.  This implementation of PI uses the Q update rule in \textbf{Equation \ref{q_bellman}}, and then derives the policy and values from that as seen in  \textbf{Equations \ref{value_equation} and \ref{policy_equation}}.  
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=2.75in, height=2.75in]{Figures/Forest_PI_Gamma_0_9_Reward_vs_Error.png}
+\caption{Forest MDP Policy Iteration (PI) Error and Reward vs Iterations}
+\label{fig:forest_pi_reward_error}
+\end{figure}
 
-
+Policy Iteration (PI) usually requires many fewer iterations than VI.  PI's \textbf{Figure \ref{fig:forest_pi}} shows this, with it converging in 5 iterations, which is many fewer than VI.   \textbf{Figure \ref{fig:forest_pi_reward_error}} shows the reward and error curves per iteration, which are not smooth.  
 
 \begin{equation} \label{eq:value_policy}
 \begin{gathered}
@@ -194,6 +256,19 @@ Value(s) = max_a Q(s,a)\\
 Policy(s) = argmax_a Q(s,a)
 \end{gathered}
 \end{equation}
+
+PI starts with an initial settings, in this case with all state values set to 0.  It then solves for the policy using a linear solver and the initial Values.  With this new policy, it then recalculates all V values using the Bellman Equation \textbf{\ref{eq:bellman}}.  This implementation of PI uses the Q update rule in \textbf{Equation \ref{q_bellman}}, and then derives the policy and values from that as seen in  \textbf{Equations \ref{eq:value_policy}}.  It is considered converged when the error is 0.  We will see in the \textbf{\emph{Lake MDP}} section that this can be problematic.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=2.75in, height=2.75in]{Figures/Forest_MDP_Value_Iteration_vs_Policy_Iteration_num_of_States_vs_Time_Gamma_0_9.png}
+\caption{Forest MDP Time to Solve vs Number of States}
+\label{fig:forest_vi_pi_time}
+\end{figure}
+
+As seen in \textbf{Figure \ref{fig:forest_states_vs_iterations}}, PI requires fewer iterations to converge than VI and the number of states does not impact the number of iterations needed.  It also is only slightly impacted by increasing Gamma ($\gamma$), while VI was strongly impacted.  It looks like a clear winner.  However,  \textbf{Figure \ref{fig:forest_vi_pi_time}} shows the challenge with PI.  Even though it takes fewer iterations, solving the linear equations is time consuming and very sensitive to the number of states.
+
+\section{Lake MDP Value Iteration (VI) and Policy Iteration (PI)}
 
 \section{Forest MDP Q Learning}
 
