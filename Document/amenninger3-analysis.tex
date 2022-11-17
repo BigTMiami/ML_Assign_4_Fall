@@ -130,7 +130,7 @@ The key toolset I used was the hiive fork [3] of the MDP Toolbox for Python [2],
 \subsection{Forest MDP}
 \textbf{\emph{Forest MDP}} is a simple MDP from the hiive MDP Toolbox [2] that models the value of a forest with respect to two actions that can be performed each year: \textbf{\emph{wait}} or \textbf{\emph{cut}}.  There is a stochastic element of forest fires that occur with probability \textbf{\emph{p}}.  Each year is a state, with a max of \textbf{\emph{S}} years / states.  Cutting deterministically transitions to the initial state,  \textbf{\emph{state=0}} and provides a \textbf{\emph{cutting reward}}.  Waiting transitions to the next year, or if in the max state, remains there.  Forest fires provide a stochastic element, with a fire transitioning back to the initial state.  A \textbf{\emph{waiting reward}} only occurs in the max state, \textbf{\emph{state=S}}.  This is a continual MDP, with no terminal or absorbing states. 
 
-The base setup for \textbf{\emph{Forest}} is seven years (\textbf{\emph{S=7}}), a 10\% chance of forest fire (\textbf{\emph{p=0.1}}), a cutting reward of 2 (\textbf{\emph{cutting reward=2}}) and a waiting reward of 4 (\textbf{\emph{waiting reward = 4}}).
+The base setup for \textbf{\emph{Forest}} is seven years (\textbf{\emph{S=7}}), a 10\% chance of forest fire (\textbf{\emph{p=0.1}}), a  (\textbf{\emph{cutting reward=2}}) in any state and a (\textbf{\emph{waiting reward = 4}}) only in the final state.
 
 In the context of MDP's, each state has an action that maximizes expected value and the set of maximizing actions for all states is called a \textbf{\emph{policy}}.  This policy can be examined to determine what rational actors are likely going to do. 
 
@@ -145,13 +145,55 @@ As described, this MDP is more likely to be "solved" using Value Iteration (VI) 
 
 I created Small (\textbf{\emph{Size=4}}), Medium (\textbf{\emph{Size=8}}), and Large (\textbf{\emph{Size=16}}) worlds to explore the impacts of different size worlds.  
 
-This MDP is interesting because it embodies a core Reinforcement Learning challenge of exploring an environment and learning what to do.  It describes a common, everyday task of exploring an environment and learning where the rewards and traps are.  Robots are often in a situation where they need to move about and find out what they should be doing.  In addition, it creates a much more interesting set of transitions between the different states, as compared with the \textbf{\emph{Forest MDP}}, where transitions are either next state or back to beginning.  Also, \textbf{\emph{Lake MDP}} is episodic vs continual for \textbf{\emph{Forest MDP}}.
+This MDP is interesting because it embodies a core Reinforcement Learning challenge of exploring an environment and learning what to do.  It describes a common, everyday task of exploring an environment and learning where the rewards and traps are.  Robots are often in a situation where they need to move about and find out what they should be doing.  In addition, it creates a much more interesting set of transitions between the different states, as compared with the \textbf{\emph{Forest MDP}}, where transitions are either next state or back to beginning.  Also, \textbf{\emph{Lake MDP}} is episodic vs  \textbf{\emph{Forest MDP}} which is continual.
 
-As described, this MDP is more likely to be "learned" in a setting using Q Learning to explore how agents work.
+As described, this MDP is more likely to be "learned" in a setting using Q Learning to explore how agents use reinforcement learning to learn to navigate and behave in an unknown environment.
 
-\section{Forest and Lake MDPs Value Iteration and Policy Iteration}
+\section{Value Iteration (VI) and Policy Iteration (PI)}
+In this section, we start with the \textbf{\emph{Forest MDP}}.   The VI and PI implementations used for this experiment started with the hiive MDP Toolbox [3], which was then "forked" to allow for modifications for this analysis.  Both VI and PI are model based algorithms, which means that the complete MDP is known and used for solving the problem.  This matches the \textbf{\emph{Forest MDP}} because it likely to be used to model different situations to see the impacts of different parameters.   
 
-\section{Lake MDP Value Iteration and Policy Iteration}
+Both VI an PI rely on the Bellman Equation, which can be represented in different ways as seen in  \textbf{Equation \ref{eq:bellman}} 
+\begin{equation} 
+\label{eq:bellman}
+\begin{gathered}
+V(s) = R(s) + \gamma \; max_{a^\prime}  \sum_{s^\prime} T(s,a,s^\prime) V(s^\prime)\\
+\hat{Q}(s,a) \xleftarrow{\alpha_t} R(s) + \gamma \;  max_{a^\prime} Q(s^\prime, a^\prime)
+\end{gathered}
+\end{equation}
+
+With Value Iteration, a sweep is performed of all states to update the Values using \textbf{Equation \ref{eq:bellman}}.  If this is run to infinity, it will converge to the exact solution.  Practically, a setting of acceptable error is created to determine convergence, with each iteration comparing the old values and new values to determine error.  I will refer to this as the \emph{Error Threshold}, which is sometimes confusingly also referred to as $\epsilon$, but we will save that designation for exploration in Q Learning. 
+
+\textbf{Figure \ref{fig:forest_vi}} shows the VI solution for the default setup of the  \textbf{\emph{Lake MDP}} outlined in the introduction with the default VI setting of \emph{Error Threshold=0.01}.  First, we can see that it takes 49 iterations to solve.  Initially, the values for all states are low, but over time the values increase and shift from the high value end state towards the initial state.  As the values increase, the policy changes from cutting in almost all states to waiting in all states.  The final policy is reached in 7 iterations, but the final emph{Error Threshold} values aren't reached for much later.  Looking at the value of the final state, even though we only get a reward of 4 for waiting, our expected value in that state is almost 27 because with this policy we will stay there until a forest fire forces a transition. 
+
+
+
+
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=2.75in, height=2.75in]{Figures/Forest_VI_Gamma_0_9_Value_vs_Iteration.png}
+\caption{Forest MDP Value Iteration (VI) with \emph{Error Threshold=0.01}. Red X indicates cut, otherwise the action is wait. }
+\label{fig:forest_vi}
+\end{figure}
+
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=2.75in, height=2.75in]{Figures/Forest_PI_Gamma_0_9_Value_vs_Iteration.png}
+\caption{Forest MDP Policy Iteration (PI) }
+\label{fig:forest_pi}
+\end{figure}
+
+PI starts with an initial setup, in this case with all state values set to 0 and default policy actions.  It then solves for the policy using a linear solver and the initial Values.  With this new policy, it then recalculates all V values using the Bellman Equation \textbf{\ref{value_bellman}}.  This implementation of PI uses the Q update rule in \textbf{Equation \ref{q_bellman}}, and then derives the policy and values from that as seen in  \textbf{Equations \ref{value_equation} and \ref{policy_equation}}.  
+
+
+
+\begin{equation} \label{eq:value_policy}
+\begin{gathered}
+Value(s) = max_a Q(s,a)\\
+Policy(s) = argmax_a Q(s,a)
+\end{gathered}
+\end{equation}
 
 \section{Forest MDP Q Learning}
 
