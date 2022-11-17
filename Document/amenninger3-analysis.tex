@@ -161,7 +161,7 @@ V(s) = R(s) + \gamma \; max_{a^\prime}  \sum_{s^\prime} T(s,a,s^\prime) V(s^\pri
 \end{gathered}
 \end{equation}
 
-With Value Iteration, a sweep is performed of all states to update the Values using \textbf{Equation \ref{eq:bellman}}.  If this is run to infinity, it will converge to the exact solution.  Practically, a setting of acceptable error is created to determine convergence, with each iteration comparing the old values and new values to determine error.  I will refer to this as the \emph{Error Threshold}, which is sometimes confusingly also referred to as $\epsilon$, but we will save that designation for exploration in Q Learning. 
+With Value Iteration, a sweep is performed of all states to update the Values using \textbf{Equation \ref{eq:bellman}}.  If this is run to infinity, it will converge to the exact solution.  Practically, a setting of acceptable error is created to determine convergence, with each iteration comparing the old values and new values to determine error.  I will refer to this error threshold as the \emph{E Stop} value.  In some discussions it is also confusingly referred to as $\epsilon$,  which is the same designation for exploration in Q Learning. 
 
 \textbf{Figure \ref{fig:forest_vi}} shows the VI solution for the default setup of the  \textbf{\emph{Lake MDP}} outlined in the introduction with the default VI setting of \emph{Error Threshold=0.01}.  First, we can see that it takes 49 iterations to solve.  Initially, the values for all states are low, but over time the values increase and shift from the high value end state towards the initial state.  As the values increase, the policy changes from cutting in almost all states to waiting in all states.  The final policy is reached in 7 iterations, but the final emph{Error Threshold} values aren't reached for much later.  Looking at the value of the final state, even though we only get a reward of 4 for waiting, our expected value in that state is almost 27 because with this policy we will stay there until a forest fire forces a transition. 
 
@@ -257,7 +257,7 @@ Policy(s) = argmax_a Q(s,a)
 \end{gathered}
 \end{equation}
 
-PI starts with an initial settings, in this case with all state values set to 0.  It then solves for the policy using a linear solver and the initial Values.  With this new policy, it then recalculates all V values using the Bellman Equation \textbf{\ref{eq:bellman}}.  This implementation of PI uses the Q update rule in \textbf{Equation \ref{q_bellman}}, and then derives the policy and values from that as seen in  \textbf{Equations \ref{eq:value_policy}}.  It is considered converged when the error is 0.  We will see in the \textbf{\emph{Lake MDP}} section that this can be problematic.
+PI starts with an initial settings, in this case with all state values set to 0.  It then solves for the policy using a linear solver and the initial Values.  With this new policy, it then recalculates all V values using the Bellman Equation \textbf{\ref{eq:bellman}}.  This implementation of PI uses the Q update rule in \textbf{Equation \ref{q_bellman}}, and then derives the policy and values from that as seen in  \textbf{Equations \ref{eq:value_policy}}.  It is considered converged when the error is 0.  We will see in the \textbf{\emph{Lake MDP}} section that this can be problematic.  In most cases, it exactly solves the MDP, while VI only approximates it to some tolerance.  VI and PI produced the same policies, but there were small Value differences, with these differences almost two orders of magnitude below the correct PI values.
 
 \begin{figure}[!htb]
 \centering
@@ -269,6 +269,69 @@ PI starts with an initial settings, in this case with all state values set to 0.
 As seen in \textbf{Figure \ref{fig:forest_states_vs_iterations}}, PI requires fewer iterations to converge than VI and the number of states does not impact the number of iterations needed.  It also is only slightly impacted by increasing Gamma ($\gamma$), while VI was strongly impacted.  It looks like a clear winner.  However,  \textbf{Figure \ref{fig:forest_vi_pi_time}} shows the challenge with PI.  Even though it takes fewer iterations, solving the linear equations is time consuming and very sensitive to the number of states.
 
 \section{Lake MDP Value Iteration (VI) and Policy Iteration (PI)}
+
+
+\begin{figure*}[!htb]
+\centering
+\includegraphics[width=7in]{Figures/Lake_VI_Policy_Iterations_Medium__Gamma_0_9__Is_Slippery__E_Stop_0_0001_Iter_0_to_13_.png}
+\caption{Lake MDP Value Iteration}
+\label{fig:lake_vi}
+\end{figure*}
+
+\textbf{Figure \ref{fig:lake_vi}} shows the \textbf{\emph{Lake MDP}} for the Medium Map.  This is a little clearer than the Large map for highlighting key elements.  Like with the Forest, we can see as that with iterations, value spreads from its sources, in this case the Goal state in the bottom right corner.  As the value spreads, the arrows which indicate the policies action direction change.  The empty value spots are holes, with value 0 and policy directions point away from them where possible.  
+
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=2.75in]{Figures/Lake_VI_E_Stop_Comparison_Large_Map__Gamma_0_9__Is_Slippery_gamma_0_01_to_0_0001_.png}
+\caption{Lake MDP Different E Stop \ $\epsilon$ values}
+\label{fig:lake_vi_estop}
+\end{figure}
+
+A key thing to note is the E Stop ($\epsilon$) value.  When I initially compared the results of the VI vs PI for the \textbf{\emph{Lake MDP}}, I found a significant number of differences in value and policy.  After digging in, I realized that the maximum value of this MDP was around .7.  The E Stop value is an absolute number and the default of 0.01 was much higher than the expected outcomes close the start state, which accounted for the differences.  By decreasing E Stop ($\epsilon$), it allowed for more accurate convergence, seen in \textbf{Figure \ref{fig:lake_vi_estop}}, creating only small value differences between VI and PI.  Once again, small differences in parameters produce very different outcomes.  
+
+\begin{figure}[!htb]
+	\begin{subfigure}[b]{0.25\textwidth}
+	\centering
+		\includegraphics[width=1.75in]{Figures/Lake_VI_Policy_Comparison_15_vs_16_Large__Gamma_0_9__Is_Slippery__E_Stop_0_0001.png}
+		\caption{Value Iteration}
+  	\end{subfigure}%
+	\begin{subfigure}[b]{0.25\textwidth}
+	\centering
+		\includegraphics[width=1.75in]{Figures/Lake_PI_Policy_Comparison_7_vs_8_Large__Gamma_0_9__Is_Slippery__E_Stop_0_0001.png}
+		\caption{Policy Iteration}
+  	\end{subfigure}%
+\caption{Lake MDP Comparing Iterations.  Red Arrows indicate where policy changes and the green highlights how much the value has changed.}
+\label{fig:lake_iteration_comparison}
+\end{figure}
+
+\textbf{Figure \ref{fig:lake_iteration_comparison} a} is another take on how VI works, comparing Iteration 15 to 16 and highlighting the Value and Policy differences.  The value changes slowly as it spreads from the reward state, changing policy along its change edge, but as it continues to change, we can see a second wave of policy changes.  This is in contrast to PI in \textbf{b}, which moves dramatically with each iteration. 
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=2.75in]{Figures/Lake_PI_and_VI_Final_Differences_Large__Gamma_0_9__Is_Slippery__E_Stop_0_0001.png}
+\caption{Lake MDP Difference between VI and PI solutions}
+\label{fig:lake_vi_pi_difference}
+\end{figure}
+
+\textbf{Figure \ref{fig:lake_vi_pi_difference}} shows the difference on the large map between the VI and PI solutions.  The value scale shows that the differences are small, but increase farther away from the source of the reward, as well as one policy difference.  These differences could be reduced further by lowering E Stop ($\epsilon$), but would require more iterations for VI.
+
+\begin{figure}[!htb]
+	\begin{subfigure}[b]{0.25\textwidth}
+		\centering
+		\includegraphics[width=1.75in]{Figures/Lake_PI_Policy_Comparison_6_vs_7_Medium__Gamma_0_9__Is_Slippery__E_Stop_0_0001.png}
+  	\end{subfigure}%
+	\begin{subfigure}[b]{0.25\textwidth}
+		\centering
+		\includegraphics[width=1.75in]{Figures/Lake_PI_Policy_Comparison_7_vs_8_Medium__Gamma_0_9__Is_Slippery__E_Stop_0_0001.png}
+  	\end{subfigure}%
+\caption{Lake MDP Policy Iteration Oscillating Non Convergence}
+\label{fig:lake_pi_oscillation}
+\end{figure}
+
+One interesting thing was found regarding convergence for PI on the Medium Lake Map.  When looking at number of iterations, it would use up to the maximum number of iterations (100), essentially not converging.  \textbf{Figure \ref{fig:lake_pi_oscillation}} shows what was happening.  The linear solver was solving very slightly different values, bouncing back and forth between two states, never reaching an error of 0.  Notice the extremely small scale of change - $10^{-17}$, which is a product of floating point math.  A check could be added to this algorithm that the error doesn't need to be zero, but below some extreme amount, like $10^{-15}$.
+
+The VI and PI error and reward curves for  the \textbf{\emph{Lake MDP}} were similar in form to the \textbf{\emph{Forest MDP}} and not reproduced in the paper.
 
 \section{Forest MDP Q Learning}
 
