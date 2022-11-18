@@ -128,7 +128,7 @@ A key element in both Markov Decision Processes (MDPs) is the idea of a discount
 The key toolset I used was the hiive fork [3] of the MDP Toolbox for Python [2], which is derived from the MDP Toolbox [1].  I also used the OpenAI Gym Frozen Lake environment [4] for the larger Frozen Lake MDP.
 
 \subsection{Forest MDP}
-\textbf{\emph{Forest MDP}} is a simple MDP from the hiive MDP Toolbox [2] that models the value of a forest with respect to two actions that can be performed each year: \textbf{\emph{wait}} or \textbf{\emph{cut}}.  There is a stochastic element of forest fires that occur with probability \textbf{\emph{p}}.  Each year is a state, with a max of \textbf{\emph{S}} years / states.  Cutting deterministically transitions to the initial state,  \textbf{\emph{state=0}} and provides a \textbf{\emph{cutting reward}}.  Waiting transitions to the next year, or if in the max state, remains there.  Forest fires provide a stochastic element, with a fire transitioning back to the initial state.  A \textbf{\emph{waiting reward}} only occurs in the max state, \textbf{\emph{state=S}}.  This is a continual MDP, with no terminal or absorbing states. 
+\textbf{\emph{Forest MDP}} is a simple MDP from the hiive MDP Toolbox [2] that models the value of a forest with respect to two actions that can be performed each year: \textbf{\emph{wait}} or \textbf{\emph{cut}}.  There is a stochastic element of forest fires that occur with probability \textbf{\emph{p}}.  Each year is a state, with a max of \textbf{\emph{S}} years / states.  Cutting deterministically transitions to the initial state,  \textbf{\emph{state=0}} and provides a \textbf{\emph{cutting reward}} of 0 if in the initial state, \textbf{\emph{cutting reward}} in the final state and a reward of 1 in all other states.  Waiting transitions to the next year, or if in the max state, remains there.  Forest fires provide a stochastic element, with a fire transitioning back to the initial state.  A \textbf{\emph{waiting reward}} only occurs in the max state, \textbf{\emph{state=S}}.  This is a continual MDP, with no terminal or absorbing states. 
 
 The base setup for \textbf{\emph{Forest}} is seven years (\textbf{\emph{S=7}}), a 10\% chance of forest fire (\textbf{\emph{p=0.1}}), a  (\textbf{\emph{cutting reward=2}}) in any state and a (\textbf{\emph{waiting reward = 4}}) only in the final state.
 
@@ -155,10 +155,7 @@ We start with the \textbf{\emph{Forest MDP}}.   The VI and PI implementations us
 Both VI an PI rely on the Bellman Equation, which can be represented in different ways as seen in  \textbf{Equation \ref{eq:bellman}} 
 \begin{equation} 
 \label{eq:bellman}
-\begin{gathered}
-V(s) = R(s) + \gamma \; max_{a^\prime}  \sum_{s^\prime} T(s,a,s^\prime) V(s^\prime)\\
-\hat{Q}(s,a) \xleftarrow{\alpha_t} R(s) + \gamma \;  max_{a^\prime} Q(s^\prime, a^\prime)
-\end{gathered}
+V(s) = R(s) + \gamma \; max_{a^\prime}  \sum_{s^\prime} T(s,a,s^\prime) V(s^\prime)
 \end{equation}
 
 With Value Iteration, a sweep is performed of all states to update the Values using \textbf{Equation \ref{eq:bellman}}.  If this is run to infinity, it will converge to the exact solution.  Practically, a setting of acceptable error is created to determine convergence, with each iteration comparing the old values and new values to determine error.  I will refer to this error threshold as the \emph{E Stop} value.  In some discussions it is also confusingly referred to as $\epsilon$,  which is the same designation for exploration in Q Learning. 
@@ -201,7 +198,7 @@ An important concern today is the increase in forest fires due to climate change
 \caption{Forest MDP Value Iteration (VI) Error and Reward vs Iterations}
 \label{fig:forest_vi_reward_error}
 \end{figure}
-From a technical standpoint, we are often interested in how quickly and accurately an algorithm performs. \textbf{Figure \ref{fig:forest_vi_reward_error}} shows the Reward and Error per iteration of VI, with smoothly increasing value and decreasing error.  
+From a technical standpoint, we are often interested in how quickly and accurately an algorithm performs. \textbf{Figure \ref{fig:forest_vi_reward_error}} shows the Reward and Error per iteration of VI, with smoothly increasing value and decreasing error.  Error is the maximum difference between an iterations values and the previous iterations values for each state.
 
 
 \begin{figure}[!htb]
@@ -333,11 +330,75 @@ One interesting thing was found regarding convergence for PI on the Medium Lake 
 
 The VI and PI error and reward curves for  the \textbf{\emph{Lake MDP}} were similar in form to the \textbf{\emph{Forest MDP}} and not reproduced in the paper.
 
-\section{Forest MDP Q Learning}
+\section{Q Learning}
+VI and PI are model based algorithms which use the fully defined model for solving.  This is not practical in many situations in the real world, where we are exploring an environment.  Q Learning is a model free algorithm, which will learn a policy by interacting with an environment.  This uses the Q form of the Bellman Equation, shown in \textbf{Equation \ref{eq:q_learning}}.  One of the first key differences is that instead of sweeping all states in each iteration, now each iteration is one state, action, reward, next state step.  We can expect more, shorter iterations.   While \textbf{\emph{Forest MDP}} is continual, we will also review episodes as another key concept in the \textbf{\emph{Lake MDP}} section.
 
-\section{Lake MDP Q Learning}
+\begin{equation} 
+\label{eq:q_learning}
+\hat{Q}(s,a) \xleftarrow{\alpha_t} R(s) + \gamma \;  max_{a^\prime} Q(s^\prime, a^\prime)
+\end{equation}
+
+The next key concept is that of exploration vs exploitation. There is a tension between maximizing reward using what is know versus accepting a lower immediate reward in order to find better new rewards.  A common model is to explore with chance $\epsilon$ or maximize with chance (1-$\epsilon$).  This is called an \textbf{$\epsilon$ Greedy} policy.  By lowering $\epsilon$ over time by some decay factor, an environment can be explored and then gradually maximized.  The decay used by the MDP algorithm is geometric, which decays by a certain percentage each step, subject to a minimum floor.
+
+After reviewing the Q Learning MDP algorithm, I realized that there was a randomizing step that every 100 iterations would restart in a random state. These random restarts significantly sped up exploration. I decided to remove this in my forked version because I thought it was "cheating".  When considering an exploration environment, it seemed like a cop-out to magically teleport to any space, cutting out the often difficult exploration to find maximum reward.  
+
+The final key concept is that of the learning factor, \textbf{$\alpha$}, which governs by how much Q is updated on each step. This also decayed over time to take big steps to learn quickly initially, but then taking much smaller steps to not be thrown around by stochastic actions or rewards. 
+
+We will see that Q learning requires substantially tuning of hyper parameters to get a good solution.
+
+\subsection{Forest MDP} 
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=2.75in]{Figures/Forest_States_Reachability_Percentages.png}
+\caption{Forest MDP Exploration Reachability Percentages for Q Learning}
+\label{fig:forest_q_reachability}
+\end{figure}
+The first challenge with the \textbf{\emph{Forest MDP}} is that the maximum reward state is the far from the starting state at then end of a set of stochastic transitions.   \textbf{Figure \ref{fig:forest_q_reachability}} shows the percentage chance of reaching each state for a given policy and $\epsilon$.  At the start of Q Learning, $\epsilon$ is 1 to explore.  Here we see that we have less than a 1\% chance of reaching the final state.  What this means is that it will take a lot of iterations to eventually get information about the end state.  In addition, until the end state is observed, policy will lean towards cutting, as that provides a reward.  
+
+\begin{figure}[!htb]
+	\begin{subfigure}[b]{0.25\textwidth}
+		\centering
+		\includegraphics[width=1.75in]{Figures/Forest_Frequencies_States_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
+  	\end{subfigure}%
+	\begin{subfigure}[b]{0.25\textwidth}
+		\centering
+		\includegraphics[width=1.75in]{Figures/Forest_Frequencies_Actions_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
+  	\end{subfigure}%
+\caption{Forest Q,  $\epsilon$ Decay of .99, $\alpha$ Decay of 0.99}
+\label{fig:forest_q_e_99_a_99_frequencies}
+\end{figure}
+
+\textbf{Figure \ref{fig:forest_q_e_99_a_99_frequencies}} shows the frequencies of actions and of visiting states at different iteration points.  The iteration scale is in 10,000 increments, which shows that an increase in the number of iterations of 5 orders of magnitude. Ouch!  The left chart shows state frequency, which shows that all time is spent in states 0 and 1.  The right shows that the actions are almost evenly split between cut and wait.  The policy learned was to wait in state 0, cut in state 1.
+
+\begin{figure}[!htb]
+	\centering
+ 	\begin{subfigure}[b]{0.175\textwidth}
+		\includegraphics[width=1.2in]{Figures/Q_Forest_Epsilon__Alpha_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
+  	\end{subfigure}%
+	 \begin{subfigure}[b]{0.175\textwidth}
+		\includegraphics[width=1.2in]{Figures/Q_Forest_Max_V__V0_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
+  	\end{subfigure}%
+	\begin{subfigure}[b]{0.175\textwidth}
+		\includegraphics[width=1.2in]{Figures/Q_Forest_Running_Reward_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
+  	\end{subfigure}
+\caption{Forest Q,  $\epsilon$ Decay of .99, $\alpha$ Decay of 0.99}
+\label{fig:forest_q_e_99_a_99_rewards}
+\end{figure}
+
+\textbf{Figure \ref{fig:forest_q_e_99_a_99_rewards}} provides insight.  The left chart shows $\epsilon$ and $\alpha$ low and unchanged.  A decay of 0.99 declines to its floor quickly.  The middle chart shows the maximum state value and the original state value.  They rise to a low value based on the floor  $\epsilon$ and $\alpha$ values.  The right chart  takes the cumulative reward over the last 1000 iterations at each point.  This is the most important chart and shows how we are doing and the initial settings don't do too well.
+
+
+\subsection{Lake MDP} 
+
 
 \section{Summary}
+Tuning needed
+PI - none
+VI - estop
+Q Learning - epsilon, epsilon decay, alpha, alpha decay
+
+No floor on epsilon \ alpha
 
 \section{References}
 \begin{tabular}{l p{2.75in}}

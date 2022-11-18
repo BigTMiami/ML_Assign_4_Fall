@@ -448,6 +448,16 @@ def value_max_min(info):
     return vmin, vmax
 
 
+def value_max_min_array(all_info):
+    vmin = 100000
+    vmax = 0
+    for info in all_info:
+        for info_iter in info:
+            vmin = min(vmin, np.min(info_iter["Value"]))
+            vmax = max(vmax, np.max(info_iter["Value"]))
+    return vmin, vmax
+
+
 def plot_policy_value_iterations(
     info, suptitle, title_settings, iters_to_use=None, seperate_charts=True
 ):
@@ -547,18 +557,20 @@ def plot_e_stop_values(estop_values, suptitle, gamma, map_name, is_slippery, sho
     title_settings = f"{map_name} Map, Gamma:{gamma}, {'Is' if is_slippery else 'Not'} Slippery"
 
     estop_info = []
+    reward_info = []
     for estop in estop_values:
         model = mdp.ValueIteration(P, R, gamma, epsilon=estop)
 
         info = model.run()
-        estop_info.append(info[-1])
+        estop_info.append(info)
 
     fig, ax = plt.subplots(1, len(estop_values), figsize=(3 * len(estop_values), 4))
     curr_ax = 0
     last_ax = len(estop_values) - 1
-    vmin, vmax = value_max_min(estop_info)
+    vmin, vmax = value_max_min_array(estop_info)
 
-    for estop, info in zip(estop_values, estop_info):
+    for estop, all_info in zip(estop_values, estop_info):
+        info = all_info[-1]
         policy = info["Policy"]
         value = info["Value"]
         iteration = info["Iteration"]
@@ -578,6 +590,10 @@ def plot_e_stop_values(estop_values, suptitle, gamma, map_name, is_slippery, sho
             cbar_ax=cbar_ax,
         )
         curr_ax += 1
+        title = f"E Stop:{estop} {title_settings}"
+        chart_reward_vs_error(
+            all_info, title, "Lake VI E Stop Reward and Error", location=lake_location
+        )
 
     plt.suptitle(suptitle + " " + title_settings)
     title = f"gamma {estop_values[0]} to {estop_values[-1]} "
