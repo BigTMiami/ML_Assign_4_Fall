@@ -77,3 +77,8 @@ Todo
 
     Need to finish lake vi pi
     check e-stop lake comparison for vi - pi
+
+Show reward curves of VI for different epsilon - see if that is a good way to determine if a good epsilon is chosen. Doesn't work well - curves look the same.  Maybe V Max is not
+
+Zeroed out Q was a mistake - should have created small random values to generate random actions, instead of all left.
+
