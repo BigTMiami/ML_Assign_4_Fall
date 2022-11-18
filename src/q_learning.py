@@ -259,6 +259,16 @@ def forest_q(
 
     chart_lines(
         ql_all,
+        ["Error"],
+        title,
+        "Q Forest Error",
+        location,
+        review_frequency=10000,
+        threshold=reward_threshold_iteration,
+    )
+
+    chart_lines(
+        ql_all,
         ["running_reward"],
         title,
         "Q Forest Running Reward",

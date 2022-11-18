@@ -344,7 +344,7 @@ After reviewing the Q Learning MDP algorithm, I realized that there was a random
 
 The final key concept is that of the learning factor, \textbf{$\alpha$}, which governs by how much Q is updated on each step. This also decayed over time to take big steps to learn quickly initially, but then taking much smaller steps to not be thrown around by stochastic actions or rewards. 
 
-We will see that Q learning requires substantially tuning of hyper parameters to get a good solution.
+We will see that Q learning requires substantially tuning of hyper parameters to get a good solution.  In addition, we will explore convergence conditions using running reward and Error.
 
 \subsection{Forest MDP} 
 
@@ -354,7 +354,7 @@ We will see that Q learning requires substantially tuning of hyper parameters to
 \caption{Forest MDP Exploration Reachability Percentages for Q Learning}
 \label{fig:forest_q_reachability}
 \end{figure}
-The first challenge with the \textbf{\emph{Forest MDP}} is that the maximum reward state is the far from the starting state at then end of a set of stochastic transitions.   \textbf{Figure \ref{fig:forest_q_reachability}} shows the percentage chance of reaching each state for a given policy and $\epsilon$.  At the start of Q Learning, $\epsilon$ is 1 to explore.  Here we see that we have less than a 1\% chance of reaching the final state.  What this means is that it will take a lot of iterations to eventually get information about the end state.  In addition, until the end state is observed, policy will lean towards cutting, as that provides a reward.  
+The first challenge with the \textbf{\emph{Forest MDP}} is that the maximum reward state is the far from the starting state at the end of a set of stochastic transitions.   \textbf{Figure \ref{fig:forest_q_reachability}} shows the percentage chance of reaching each state for a given policy and $\epsilon$.  At the start of Q Learning, $\epsilon$ is 1 to explore.  Here we see that we have less than a 1\% chance of reaching the final state.  What this means is that it will take a lot of iterations to eventually get information about the end state.  In addition, until the end state is observed, policy will lean towards cutting, as that provides a reward.  
 
 \begin{figure}[!htb]
 	\begin{subfigure}[b]{0.25\textwidth}
@@ -369,7 +369,7 @@ The first challenge with the \textbf{\emph{Forest MDP}} is that the maximum rewa
 \label{fig:forest_q_e_99_a_99_frequencies}
 \end{figure}
 
-\textbf{Figure \ref{fig:forest_q_e_99_a_99_frequencies}} shows the frequencies of actions and of visiting states at different iteration points.  The iteration scale is in 10,000 increments, which shows that an increase in the number of iterations of 5 orders of magnitude. Ouch!  The left chart shows state frequency, which shows that all time is spent in states 0 and 1.  The right shows that the actions are almost evenly split between cut and wait.  The policy learned was to wait in state 0, cut in state 1.
+\textbf{Figure \ref{fig:forest_q_e_99_a_99_frequencies}} shows the frequencies of actions and of visiting states at different iteration points.  The iteration scale is in 10,000 increments, which shows that an increase in the number of iterations of 5 orders of magnitude versus VI and PI. Ouch!  The left chart shows state frequency, which shows that all time is spent in states 0 and 1.  The right shows that the actions are almost evenly split between cut and wait.  The policy learned was to wait in state 0, cut in state 1.
 
 \begin{figure}[!htb]
 	\centering
@@ -377,7 +377,7 @@ The first challenge with the \textbf{\emph{Forest MDP}} is that the maximum rewa
 		\includegraphics[width=1.2in]{Figures/Q_Forest_Epsilon__Alpha_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
   	\end{subfigure}%
 	 \begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Forest_Max_V__V0_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
+		\includegraphics[width=1.2in]{Figures/Q_Forest_Error_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
   	\end{subfigure}%
 	\begin{subfigure}[b]{0.175\textwidth}
 		\includegraphics[width=1.2in]{Figures/Q_Forest_Running_Reward_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
@@ -386,7 +386,38 @@ The first challenge with the \textbf{\emph{Forest MDP}} is that the maximum rewa
 \label{fig:forest_q_e_99_a_99_rewards}
 \end{figure}
 
-\textbf{Figure \ref{fig:forest_q_e_99_a_99_rewards}} provides insight.  The left chart shows $\epsilon$ and $\alpha$ low and unchanged.  A decay of 0.99 declines to its floor quickly.  The middle chart shows the maximum state value and the original state value.  They rise to a low value based on the floor  $\epsilon$ and $\alpha$ values.  The right chart  takes the cumulative reward over the last 1000 iterations at each point.  This is the most important chart and shows how we are doing and the initial settings don't do too well.
+\textbf{Figure \ref{fig:forest_q_e_99_a_99_rewards}} provides insight.  The left chart shows $\epsilon$ and $\alpha$ low and unchanged.  A decay of 0.99 declines to its floor quickly.  The middle chart shows the error at each given iteration.  First, it is very low, which makes sense because only one state is changing per iteration.  It is quite noisy, but does have a declining initial pattern.  The right chart  takes the cumulative reward over the last 1000 iterations at each point.  This is the most important chart and shows how we are doing and the initial settings made all progress in the first few iterations, which don't show on this chart.
+
+\begin{figure}[!htb]
+	\centering
+ 	\begin{subfigure}[b]{0.175\textwidth}
+		\includegraphics[width=1.2in]{Figures/Q_Forest_Epsilon__Alpha_Gamma_0_9__E_Dec_0_999998__A_Dec_0_99999.png}
+  	\end{subfigure}%
+	 \begin{subfigure}[b]{0.175\textwidth}
+		\includegraphics[width=1.2in]{Figures/Q_Forest_Error_Gamma_0_9__E_Dec_0_999998__A_Dec_0_99999.png}
+  	\end{subfigure}%
+	\begin{subfigure}[b]{0.175\textwidth}
+		\includegraphics[width=1.2in]{Figures/Q_Forest_Running_Reward_Gamma_0_9__E_Dec_0_999998__A_Dec_0_99999.png}
+  	\end{subfigure}
+\caption{Forest Q,  $\epsilon$ Decay of .99, $\alpha$ Decay of 0.99}
+\label{fig:forest_q_e_999998_a_99999_rewards}
+\end{figure}
+
+\begin{figure}[!htb]
+	\begin{subfigure}[b]{0.25\textwidth}
+		\centering
+		\includegraphics[width=1.75in]{Figures/Forest_Frequencies_States_Gamma_0_9__E_Dec_0_999998__A_Dec_0_99999.png}
+  	\end{subfigure}%
+	\begin{subfigure}[b]{0.25\textwidth}
+		\centering
+		\includegraphics[width=1.75in]{Figures/Forest_Frequencies_Actions_Gamma_0_9__E_Dec_0_999998__A_Dec_0_99999.png}
+  	\end{subfigure}%
+\caption{Forest Q,  $\epsilon$ Decay of .999998, $\alpha$ Decay of 0.99999}
+\label{fig:forest_q_e_999998_a_99999_frequencies}
+\end{figure}
+
+\textbf{Figure \ref{fig:forest_q_e_999998_a_99999_rewards}} shows the results of dramatically increasing the decay factor.  The left chart shows that $\epsilon$ remains high throughout the experiment.  Error is more dramatic, but shows the same pattern as before.  The right running reward chart shows the key difference - a strongly rising running reward.  \textbf{Figure \ref{fig:forest_q_e_999998_a_99999_frequencies}} shows the shift in a
+
 
 
 \subsection{Lake MDP} 
