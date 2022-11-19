@@ -82,3 +82,9 @@ Show reward curves of VI for different epsilon - see if that is a good way to de
 
 Zeroed out Q was a mistake - should have created small random values to generate random actions, instead of all left.
 
+Add solved Large Map
+
+Compare Large Lake Q learning to PI
+
+Time and Iterations for VI, PI and Q
+

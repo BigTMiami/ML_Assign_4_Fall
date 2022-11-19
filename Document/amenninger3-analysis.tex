@@ -461,15 +461,11 @@ The key observation is that running reward is still increasing, which is primari
 After looking at the different runs and output, I chose running reward as the convergence criteria, creating a threshold for when the running reward stops increasing.  I used large windows and averages to prevent the noise from triggering the threshold.  I didn't move this convergence threshold back into the MDP toolbox, but it would be possible to do this.  The running reward chart serves as the convergence chart for Q Learning.
 
 \subsection{Lake MDP} 
-I was optimistic that \textbf{\emph{Lake MDP}} would be an easy extension of Forest, but the first key issue was that Lake is an episodic MDP.  Looking at the data, the state frequencies where all in holes and the goal state.  This was partially a function of removing the random reset of state every 100 episodes, which would have glossed over the underlying challenge.  The challenge was that the transition model from Frozen Lake was that the next transitions from a hole or goal was back to itself.  The MDP implementation did not have a concept of terminal states.  One change I could have made was to change those transition states back to the start, but there would not be a concept of episode.  Instead, I created a modified episodic Q learning that takes a list of terminal states and tracks episodes.  For Lake Q Learning, I used episodes instead of iterations for charting, which I thought was a better representation for episodic learning, although it makes comparisons between Lake and Forest are a bit tricky.
+I was optimistic that \textbf{\emph{Lake MDP}} would be an easy extension of Forest, but the first key issue was that Lake is an episodic MDP.  Looking at the data, the state frequencies where all in holes and the goal state.  This was partially a function of removing the random reset of state every 100 episodes, which would have glossed over the underlying challenge.  The challenge was that the transition model from Frozen Lake was that the transitions from a hole or goal was back to itself.  The MDP implementation did not have a concept of terminal states.  One change I could have made was to change those transition states back to the start, but there would not be a concept of episode.  Instead, I created a modified episodic Q learning that takes a list of terminal states and tracks episodes.  For Lake Q Learning, I used episodes instead of iterations for charting, which I thought was a better representation for episodic learning, although it makes comparisons between Lake and Forest are a bit tricky.
 
 With the episodic changes, the Small and Medium Lake maps were solved using  $\epsilon$ and $\alpha$ decays from Forest.  With the Large Lake map, I was not producing any useful convergence.  I moved up to 100 billion iterations and extremely large $\epsilon$ and $\alpha$ decays, with no progress.  Looking at the frequency charts, all visitation was close to the start.   \textbf{Figure \ref{fig:forest_q_reachability}} showed the challenge of reaching end states in the Forest MDP.  After consideration, with the highly stochastic actions and holes ending episodes, while I couldn't calculate it, the chance of reaching the end state without random restarts was effectively zero.  Ouch!
 
-Based on this, I reduced the Large map size to 16 X 16.  I was still not able to solve, so I started to remove holes until I started to get traction and used this map. I went back and reran VI and PI using this as the new baseline Large Lake Map  (\emph{which is what is used through out the report now}).  
-
-
-
-
+Based on this, I reduced the Large map size to 16 X 16.  I was still not able to solve, so I started to remove holes until I started to get traction and used this map. I went back and reran VI and PI using this as the new baseline Large Lake Map  (\emph{which is what is used through out the report now}).  The Large Lake used 20 million iterations for the experiment runs, which is 6 orders of magnitude greater than VI.
 
 \begin{figure}[!htb]
 	\centering
@@ -501,6 +497,9 @@ Based on this, I reduced the Large map size to 16 X 16.  I was still not able to
 \label{fig:lake_q_e_99999995_a_99999995_maps}
 \end{figure}
 
+\textbf{Figure \ref{fig:lake_q_e_99999995_a_99999995_rewards}} shows the first Large Lake run with some traction.  The left chart shows that exploration is still fairly high at the end, which is reflected in the right running reward chart.  Even though it does trigger the threshold criteria, we can see an upward trend, mostly due to the continued exploration.  The x axis for these charts is episodes, which is different from iterations used for all charts previously.   The length of these episodes decreases over time as there is less exploration and a policy is followed.   I will use iterations instead of episodes for better comparisons in the summary section.
+
+\textbf{Figure \ref{fig:lake_q_e_99999995_a_99999995_maps}} shows policy and the frequency that each state is visited in the last 1000 episodes.  On the left, we see the chart after 2000 episodes.  This shows a lot of general exploration originating out of the start location.  The right chart shows the pattern at the threshold episode, with a clear pattern or moving across the center of the map.  The policies in the top right and bottom left look a little funky and were probably not explored too much.
 
 \begin{figure}[!htb]
 	\centering
@@ -532,12 +531,10 @@ Based on this, I reduced the Large map size to 16 X 16.  I was still not able to
 \label{fig:lake_q_e_9999995_a_9999995_maps}
 \end{figure}
 
-
+The goal was to reduce the exploration and learning to allow for a true convergence, with several iterations of parameter tuning. \textbf{Figure \ref{fig:lake_q_e_9999995_a_9999995_rewards}} shows the final Large Lake solution.  The left shows the quick reduction in exploration and the right chart shows a quick rise to the maximum reward per episode with a clear, converged plateau.  \textbf{Figure \ref{fig:lake_q_e_9999995_a_9999995_maps}} state visits map on the left shows a fairly established policy with more exploration around the goal state.  The converged map on the right shows a much tighter path, with no exploration and a solid policy.
 
 
 Initial Alpha value can also be larger.  Exploration with this showed some advantages, but the final model presented was best.
-
-
 
 \section{Summary}
 Tuning needed

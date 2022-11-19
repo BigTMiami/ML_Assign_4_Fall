@@ -298,7 +298,7 @@ def forest_q(
             save_stats[item] = int(value)
     save_stats["alpha_decay"] = alpha_decay
     save_stats["epsilon_decay"] = epsilon_decay
-    save_json_to_file(save_stats, f"Q Forest {save_type} {title}", location)
+    save_json_to_file(save_stats, f"Q Forest {save_type} {title}.json", location)
 
     return ql_all
 
@@ -376,6 +376,15 @@ def q_lake_run(
         "Episode",
         value_window=value_window,
         pct_window=pct_window,
+    )
+
+    lake_plot_policy_and_value(
+        ql.policy,
+        ql.V,
+        title_settings,
+        suptitle="Lake Q Final Policy and Value",
+        location=location,
+        show_policy=True,
     )
 
     chart_lines(
@@ -456,6 +465,6 @@ def q_lake_run(
     save_stats["epsilon_decay"] = epsilon_decay
     save_stats["map_name"] = map_name
     save_stats["is_slippery"] = is_slippery
-    save_json_to_file(save_stats, f"Q Lake {save_type} {title_settings}", location)
+    save_json_to_file(save_stats, f"Q Lake {save_type} {title_settings}.json", location)
 
     return episode_stats

@@ -414,6 +414,9 @@ def compare_two_policies(policy_1, policy_2, title, suptitle, map_used):
 def compare_two_policies_and_values(policy_1, policy_2, value_1, value_2, title, suptitle):
     mask = policy_1 == policy_2
     m = np.array(mask)
+    policy_2 = np.array(policy_2)
+    value_2 = np.array(value_2)
+    value_1 = np.array(value_1)
     p = policy_2.astype("object")
     p[m] = ""
     value = np.abs(value_2 - value_1)

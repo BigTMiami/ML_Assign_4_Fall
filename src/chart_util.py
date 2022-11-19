@@ -1,6 +1,8 @@
 import json
 import os
 
+import numpy as np
+
 
 def clean_string(in_string):
     out_string = in_string.replace(" ", "_")
@@ -30,7 +32,13 @@ def save_to_file(plt, title, location):
     plt.close()
 
 
-def save_json_to_file(to_save_dict, file_name, location):
+def save_json_to_file(to_save_dict, file_name, location, clean_dict=False):
+    if clean_dict:
+        for item, value in to_save_dict.items():
+            if isinstance(value, np.ndarray):
+                to_save_dict[item] = value.tolist()
+            elif isinstance(value, np.int64):
+                to_save_dict[item] = int(value)
     file_location = f"{location}/{file_name}"
     with open(file_location, "w") as f:
         json.dump(to_save_dict, f, indent=2)

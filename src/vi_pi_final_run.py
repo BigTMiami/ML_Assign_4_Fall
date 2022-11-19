@@ -6,6 +6,7 @@ sys.path.insert(0, "src/")
 import hiive.mdptoolbox.example as example
 import hiive.mdptoolbox.mdp as mdp
 
+from chart_util import save_json_to_file
 from maps import maps
 from q_learning import chart_lines
 from vi_pi_functions import (
@@ -37,8 +38,12 @@ P, R = example.forest(S=S, p=p, r1=r1, r2=r2)
 pi = mdp.PolicyIteration(P, R, gamma)
 pi_info = pi.run()
 
+
 vi = mdp.ValueIteration(P, R, gamma, epsilon=0.001)
 vi_info = vi.run()
+
+save_json_to_file(pi_info[-1], "Forest PI.json", forest_location, clean_dict=True)
+save_json_to_file(vi_info[-1], "Forest VI.json", forest_location, clean_dict=True)
 
 chart_value_vs_iteration(pi_info, suptitle=f"Forest PI (Gamma:{gamma})")
 chart_value_vs_iteration(vi_info, suptitle=f"Forest VI (Gamma:{gamma})")
@@ -74,6 +79,9 @@ vi_info = vi.run()
 
 pi = mdp.PolicyIteration(P, R, gamma, max_iter=100)
 pi_info = pi.run()
+
+save_json_to_file(pi_info[-1], f"Lake PI {title_settings}.json", lake_location, clean_dict=True)
+save_json_to_file(vi_info[-1], f"Lake VI {title_settings}.json", lake_location, clean_dict=True)
 
 lake_plot_policy_and_value(
     vi.policy, vi.V, title_settings, suptitle="Lake VI Final Policy and Value", show_policy=True
@@ -144,6 +152,9 @@ vi_info = vi.run()
 
 pi = mdp.PolicyIteration(P, R, gamma, max_iter=100)
 pi_info = pi.run()
+
+save_json_to_file(pi_info[-1], f"Lake PI {title_settings}.json", lake_location, clean_dict=True)
+save_json_to_file(vi_info[-1], f"Lake VI {title_settings}.json", lake_location, clean_dict=True)
 
 lake_plot_policy_and_value(
     vi.policy, vi.V, title_settings, suptitle="Lake VI Final Policy and Value", show_policy=True
