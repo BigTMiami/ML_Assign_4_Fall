@@ -537,6 +537,25 @@ The goal was to reduce the exploration and learning to allow for a true converge
 Initial Alpha value can also be larger.  Exploration with this showed some advantages, but the final model presented was best.
 
 \section{Summary}
+
+\begin{table}[!htb]
+	\begin{center}
+		\begin{tabular}{| c | c  | c | c |}
+			\hline
+		 	& Time & Iterations & Equalized\\ 
+			\hline
+			\hline
+			PI & 0.00078  &  6  & 6 \\
+ 			VI & 0.00083 & 50 & 50 \\  
+			Q & 3.98869  & 296,500  & 42,357  \\
+			\hline
+		\end{tabular}
+	\end{center}
+	\caption{Forest Algorithm Comparisons.  Q Equalized are iterations divided by 7 for better comparison with VI and PI}
+	\label{table:forest_comparisons}
+\end{table}
+
+
 Tuning needed
 PI - none
 VI - estop
