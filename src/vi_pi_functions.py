@@ -370,18 +370,17 @@ def lake_plot_policy_and_value(
     pp = (
         lake_policy_as_string(policy) if show_policy else np.full((size, size), "", dtype="object")
     )
-
+    print(vmax)
+    print(vmin)
     ax = sns.heatmap(
         value,
         annot=pp,
         fmt="",
         cbar=cbar,
-        norm=LogNorm(),
+        norm=LogNorm(vmin=vmin, vmax=vmax),
         cmap="BuGn",
         linewidth=0.5,
         linecolor="black",
-        vmin=vmin,
-        vmax=vmax,
         cbar_kws={"label": value_label},
         annot_kws={"fontsize": 12, "weight": "bold", "color": direction_color},
         ax=ax,
@@ -411,19 +410,37 @@ def compare_two_policies(policy_1, policy_2, title, suptitle, map_used):
     )
 
 
-def compare_two_policies_and_values(policy_1, policy_2, value_1, value_2, title, suptitle):
-    mask = policy_1 == policy_2
-    m = np.array(mask)
+def compare_two_policies_and_values(
+    policy_1,
+    policy_2,
+    value_1,
+    value_2,
+    title,
+    suptitle,
+    location=lake_location,
+    vmin=None,
+    vmax=None,
+):
     policy_2 = np.array(policy_2)
     value_2 = np.array(value_2)
     value_1 = np.array(value_1)
+    mask = policy_1 == policy_2
+    m = np.array(mask)
+
     p = policy_2.astype("object")
     p[m] = ""
     value = np.abs(value_2 - value_1)
     # Need to make sure all values are positive for log value
     # value = value - np.min(value)
     lake_plot_policy_and_value(
-        p, value, title, suptitle=suptitle, red_direction=True, location=lake_location
+        p,
+        value,
+        title,
+        suptitle=suptitle,
+        red_direction=True,
+        location=location,
+        vmin=vmin,
+        vmax=vmax,
     )
 
 

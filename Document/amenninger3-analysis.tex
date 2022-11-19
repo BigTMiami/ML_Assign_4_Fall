@@ -311,14 +311,7 @@ A key thing to note is the E Stop ($\epsilon$) value.  When I initially compared
 
 \textbf{Figure \ref{fig:lake_iteration_comparison} a} is another take on how VI works, comparing Iteration 15 to 16 and highlighting the Value and Policy differences.  The value changes slowly as it spreads from the reward state, changing policy along its change edge, but as it continues to change, we can see a second wave of policy changes.  This is in contrast to PI in \textbf{b}, which moves dramatically with each iteration.  \textbf{Figure \ref{fig:lake_pi_large_solution}} shows the Large Lake PI solution, which would be the most accurate.
 
-\begin{figure}[!htb]
-\centering
-\includegraphics[width=2.75in]{Figures/Lake_PI_and_VI_Final_Differences_Large__Gamma_0_9__Is_Slippery__E_Stop_0_0001.png}
-\caption{Large Lake Differences between VI and PI solutions}
-\label{fig:lake_vi_pi_difference}
-\end{figure}
-
-\textbf{Figure \ref{fig:lake_vi_pi_difference}} shows the difference on the large map between the VI and PI solutions.  The value scale shows that the differences are small, but increase farther away from the source of the reward, as well as one policy difference.  These differences could be reduced further by lowering E Stop ($\epsilon$), but would require more iterations for VI.
+\textbf{Figure \ref{fig:large_lake_comparisions} a} in the summary section shows the difference on the large map between the VI and PI solutions.  The value scale shows that the differences are small and increase farther away from the source of the reward, as well as one policy difference.  This makes sense, because each iteration sweep is propagating the source reward outward, so the source reward becomes more attenuated farther away. These differences could be reduced further by lowering E Stop ($\epsilon$), but would require more iterations for VI.
 
 \begin{figure}[!htb]
 	\begin{subfigure}[b]{0.25\textwidth}
@@ -499,42 +492,48 @@ Based on this, I reduced the Large map size to 16 X 16.  I was still not able to
 
 \textbf{Figure \ref{fig:lake_q_e_99999995_a_99999995_rewards}} shows the first Large Lake run with some traction.  The left chart shows that exploration is still fairly high at the end, which is reflected in the right running reward chart.  Even though it does trigger the threshold criteria, we can see an upward trend, mostly due to the continued exploration.  The x axis for these charts is episodes, which is different from iterations used for all charts previously.   The length of these episodes decreases over time as there is less exploration and a policy is followed.   I will use iterations instead of episodes for better comparisons in the summary section.
 
-\textbf{Figure \ref{fig:lake_q_e_99999995_a_99999995_maps}} shows policy and the frequency that each state is visited in the last 1000 episodes.  On the left, we see the chart after 2000 episodes.  This shows a lot of general exploration originating out of the start location.  The right chart shows the pattern at the threshold episode, with a clear pattern or moving across the center of the map.  The policies in the top right and bottom left look a little funky and were probably not explored too much.
+\textbf{Figure \ref{fig:lake_q_e_99999995_a_99999995_maps}} shows policy and the frequency that each state is visited in the last 1000 episodes.  On the left, we see the chart after 2000 episodes.  This shows a lot of general exploration originating out of the start location.  The right chart shows the pattern at the threshold episode, with a clear pattern or moving across the center of the map.  The policies in the top right and bottom left look a little funky and were probably not explored very much.
 
 \begin{figure}[!htb]
 	\centering
  	\begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Lake_Epsilon_and_Alpha_Decay_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_1__A_Dec_0_9999995__Is_Slippery.png}
+		\includegraphics[width=1.2in]{Figures/Q_Lake_Epsilon_and_Alpha_Decay_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_5__A_Dec_0_9999995__Is_Slippery.png}
   	\end{subfigure}%
 	 \begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Lake_Error_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_1__A_Dec_0_9999995__Is_Slippery.png}
+		\includegraphics[width=1.2in]{Figures/Q_Lake_Error_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_5__A_Dec_0_9999995__Is_Slippery.png}
   	\end{subfigure}%
 	\begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Lake_Reward_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_1__A_Dec_0_9999995__Is_Slippery.png}
+		\includegraphics[width=1.2in]{Figures/Q_Lake_Reward_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_5__A_Dec_0_9999995__Is_Slippery.png}
   	\end{subfigure}
-\caption{Lake Q,  $\epsilon$ Decay of 0.9999995, $\alpha$ Decay of 0.9999995}
+\caption{Lake Q,  $\epsilon$ Decay=0.9999995, $\alpha$ Decay=0.9999995, Initial $\alpha$=0.5}
 \label{fig:lake_q_e_9999995_a_9999995_rewards}
 \end{figure}
 
 \begin{figure}[!htb]
 	\begin{subfigure}[b]{0.25\textwidth}
 		\centering
-		\includegraphics[width=1.75in]{Figures/Q_Lake_State_Visits_Begining_Episode__2000_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_1__A_Dec_0_9999995__Is_Slippery.png}
+		\includegraphics[width=1.75in]{Figures/Q_Lake_State_Visits_Begining_Episode__2000_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_5__A_Dec_0_9999995__Is_Slippery.png}
 		\caption{Initial Episodes}
   	\end{subfigure}%
 	\begin{subfigure}[b]{0.25\textwidth}
 		\centering
-		\includegraphics[width=1.75in]{Figures/Q_Lake_State_Visits_Threshold_Episode__80000_0_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_1__A_Dec_0_9999995__Is_Slippery.png}
+		\includegraphics[width=1.75in]{Figures/Q_Lake_State_Visits_Threshold_Episode__80000_0_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_5__A_Dec_0_9999995__Is_Slippery.png}
 		\caption{Threshold Episodes}
   	\end{subfigure}%
-\caption{Lake Q,  $\epsilon$ Decay of 0.9999995, $\alpha$ Decay of 0.9999995}
+\caption{Lake Q,  $\epsilon$ Decay=0.9999995, $\alpha$ Decay=0.9999995, Initial $\alpha$=0.5}
 \label{fig:lake_q_e_9999995_a_9999995_maps}
 \end{figure}
 
-The goal was to reduce the exploration and learning to allow for a true convergence, with several iterations of parameter tuning. \textbf{Figure \ref{fig:lake_q_e_9999995_a_9999995_rewards}} shows the final Large Lake solution.  The left shows the quick reduction in exploration and the right chart shows a quick rise to the maximum reward per episode with a clear, converged plateau.  \textbf{Figure \ref{fig:lake_q_e_9999995_a_9999995_maps}} state visits map on the left shows a fairly established policy with more exploration around the goal state.  The converged map on the right shows a much tighter path, with no exploration and a solid policy.
+The goal was to reduce the exploration and learning to allow for a true convergence, with several iterations of parameter tuning. \textbf{Figure \ref{fig:lake_q_e_9999995_a_9999995_rewards}} shows the final Large Lake solution.  The left shows the quick reduction in exploration.  The initial $\alpha$ was also increased, increasing learning in the beginning to more quickly develop the best policy.  The right chart shows a quick rise to the maximum reward per episode with a clear, converged plateau.  \textbf{Figure \ref{fig:lake_q_e_9999995_a_9999995_maps}} state visits map on the left shows a fairly established policy with more exploration around the goal state.  The converged map on the right shows a much tighter path, with no exploration and a solid policy.
 
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=2.75in]{Figures/Lake_Q_Final_Policy_and_Value_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_5__A_Dec_0_9999995__Is_Slippery.png}
+\caption{Large Lake Q solution}
+\label{fig:lake_q_large_solution}
+\end{figure}
 
-Initial Alpha value can also be larger.  Exploration with this showed some advantages, but the final model presented was best.
+\textbf{Figure \ref{fig:lake_q_large_solution}} shows the final Large Lap Values and Policy.   \textbf{Figure \ref{fig:large_lake_comparisions} b} in the summary section shows the difference on the large map between the Q and PI solutions.  The value scale shows that the differences are greater than those between PI and VI with many more policy differences.  Here, the value differences \textbf{decrease} farther away from the source of the reward, vs increase, which is the opposite of PI vs VI.  In Q learning, the reward propagation is entwined in the evolving policy through exploration and learning. 
 
 \section{Summary}
 
@@ -555,6 +554,39 @@ Initial Alpha value can also be larger.  Exploration with this showed some advan
 	\label{table:forest_comparisons}
 \end{table}
 
+
+\begin{table}[!htb]
+	\begin{center}
+		\begin{tabular}{| c | r  | c | c |}
+			\hline
+		 	& Time & Iterations & Equalized\\ 
+			\hline
+			\hline
+			PI & 0.0656 &  17  & 17 \\
+ 			VI & 0.0036 & 53 & 53\\  
+			Q & 187.0892  & 9,603,499  & 37,513  \\
+			\hline
+		\end{tabular}
+	\end{center}
+	\caption{Large Lake Algorithm Comparisons.  Q Equalized are iterations divided by 256 for better comparison with VI and PI}
+	\label{table:forest_comparisons}
+\end{table}
+
+
+\begin{figure}[!htb]
+	\begin{subfigure}[b]{0.25\textwidth}
+		\centering
+		\includegraphics[width=1.75in]{Figures/Large_Lake_PI_vs_VI_Differences_.png}
+		\caption{PI vs VI}
+  	\end{subfigure}%
+	\begin{subfigure}[b]{0.25\textwidth}
+		\centering
+		\includegraphics[width=1.75in]{Figures/Large_Lake_PI_vs_Q_Differences_.png}
+		\caption{PI vs Q}
+  	\end{subfigure}%
+\caption{Large Lake Value and Policy Comparisons}
+\label{fig:large_lake_comparisions}
+\end{figure}
 
 Tuning needed
 PI - none
