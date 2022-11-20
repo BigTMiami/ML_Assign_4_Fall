@@ -13,6 +13,7 @@
 \usepackage{amsmath} % ENTERED BY AFM
 \usepackage{subcaption}
 \usepackage[table,usenames,dvipsnames]{xcolor}
+\usepackage{indentfirst}
 
 
 
@@ -533,9 +534,15 @@ The goal was to reduce the exploration and learning to allow for a true converge
 \label{fig:lake_q_large_solution}
 \end{figure}
 
-\textbf{Figure \ref{fig:lake_q_large_solution}} shows the final Large Lap Values and Policy.   \textbf{Figure \ref{fig:large_lake_comparisions} b} in the summary section shows the difference on the large map between the Q and PI solutions.  The value scale shows that the differences are greater than those between PI and VI with many more policy differences.  Here, the value differences \textbf{decrease} farther away from the source of the reward, vs increase, which is the opposite of PI vs VI.  In Q learning, the reward propagation is entwined in the evolving policy through exploration and learning. 
+\textbf{Figure \ref{fig:lake_q_large_solution}} shows the final Large Lap Values and Policy.   \textbf{Figure \ref{fig:large_lake_comparisions} b} in the summary section shows the difference on the large map between the Q and PI solutions.  The value differences \textbf{decrease} farther away from the source of the reward, vs increase, which is the opposite of PI vs VI.  In addition, the differences are do not have a uniform gradient as in VI, but are patchy.  In Q learning, the reward propagation is entwined in the evolving policy through exploration and learning. 
+
+There are many more policy differences than between PI and VI which highlights that small value differences can create different policies.  In general, the policy differences do not make a meaningful difference in outcome.  When we look at the differences around the goal in the bottom right corner,  down action or right action policy on the diagonal axis won't make a difference as they both move towards the goal.  There are many policies in a large stochastic environment which will produce similar outcomes.
 
 \section{Summary}
+
+\textbf{Table \ref{table:forest_comparisons}} reviews the performance for VI, PI and Q Learning for the Forest MDP.  PI's time is only slightly better than VI, but iteration count is much lower.  Q Learning is more than four orders of magnitude slower.  Iterations in VI and PI perform a sweep on all states, while Q Learning iterations only update one state.  To provide a more even comparison, the Equalized column normalizes this by dividing Q Learning iterations by 7, the number of state updates in a VI or PI iteration.  Q Learning uses more than four orders of magnitude more equalized iterations than PI.
+
+From the performance numbers it would seem to always use PI, but Q learning is likely to more useful in many real world situations.  Often, we don't know what the environment is and are truly trying to figure it out and will need a model free algorithm, like Q Learning.  Also, in continuous environment, you can't sweep all states. Q can be modified from a table model to a function approximation, often using a deep neural network, to explore this space.
 
 \begin{table}[!htb]
 	\begin{center}
@@ -544,16 +551,17 @@ The goal was to reduce the exploration and learning to allow for a true converge
 		 	& Time & Iterations & Equalized\\ 
 			\hline
 			\hline
-			PI & 0.00078  &  6  & 6 \\
+			PI & \cellcolor{SpringGreen}0.00078  &  \cellcolor{SpringGreen}6  &\cellcolor{SpringGreen} 6 \\
  			VI & 0.00083 & 50 & 50 \\  
 			Q & 3.98869  & 296,500  & 42,357  \\
 			\hline
 		\end{tabular}
 	\end{center}
-	\caption{Forest Algorithm Comparisons.  Q Equalized are iterations divided by 7 for better comparison with VI and PI}
+	\caption{Forest Algorithm Comparisons.  Equalized Q are iterations divided by 7 for better comparison with VI and PI}
 	\label{table:forest_comparisons}
 \end{table}
 
+\textbf{Table \ref{table:lake_comparisons}} reviews the Lake MDP.  Here we can see that VI uses less time than PI.  Earlier, in \textbf{Figure \ref{fig:forest_vi_pi_time}}, we saw that PI needed more time to solve as more states were added.  In the Forest MDP, the small number of states neutralized this issue, while the Large Lake had many more states making VI the faster of the two algorithms.  Q learning if 5 orders of magnitude slower but only uses four orders of magnitude more iterations. 
 
 \begin{table}[!htb]
 	\begin{center}
@@ -562,16 +570,17 @@ The goal was to reduce the exploration and learning to allow for a true converge
 		 	& Time & Iterations & Equalized\\ 
 			\hline
 			\hline
-			PI & 0.0656 &  17  & 17 \\
- 			VI & 0.0036 & 53 & 53\\  
+			PI & 0.0656 &   \cellcolor{SpringGreen}17  &  \cellcolor{SpringGreen}17 \\
+ 			VI &  \cellcolor{SpringGreen}0.0036 & 53 & 53\\  
 			Q & 187.0892  & 9,603,499  & 37,513  \\
 			\hline
 		\end{tabular}
 	\end{center}
-	\caption{Large Lake Algorithm Comparisons.  Q Equalized are iterations divided by 256 for better comparison with VI and PI}
-	\label{table:forest_comparisons}
+	\caption{Large Lake Algorithm Comparisons.  Equalized Q are iterations divided by 256 for better comparison with VI and PI}
+	\label{table:lake_comparisons}
 \end{table}
 
+As discussed earlier, \textbf{Figure \ref{fig:large_lake_comparisions}} shows the differences in PI vs VI and PI vs Q Learning for the Large Lake MDP.  PI provides an exact answer as the baseline.  Policy far from the reward \ goal state can be different depending on error factor $\epsilon$ for VI.  Q Learning shows more differences impacted by exploration $\epsilon$ decay, initial learning rate $\alpha$ and  $\alpha$ decay.   However, in both cases, the different policies produce almost equivalent outputs, highlighting that in many MDPs, there can be many policies that are practically optimal.
 
 \begin{figure}[!htb]
 	\begin{subfigure}[b]{0.25\textwidth}
@@ -588,20 +597,18 @@ The goal was to reduce the exploration and learning to allow for a true converge
 \label{fig:large_lake_comparisions}
 \end{figure}
 
-Tuning needed
-PI - none
-VI - estop
-Q Learning - epsilon, epsilon decay, alpha, alpha decay
-A lot of interplay between them and environment
-easy to fall into local minima
-very easy to miss key rewards
+All MDPs are very sensitive to the time horizon that is being considered, which is governed by the discount factor gamma $\gamma$.  
 
-No floor on epsilon \ alpha
+\subsection{Algorithm Review}
 
-Policy far from the reward \ goal state can be very different depending on e stop (VI) and a bunch of things in Q Learning
+\textbf{Policy Iteration} (PI) required no tuning and would return the exact answer.  The MDP Toolbox iteration is susceptible to oscillation due to floating point math issues, but this could be resolved.  PI slows down exponentially with more states, but there are enhanced versions that can minimize this issues through different solving techniques.  
 
+\textbf{Value Iteration} (VI) does require some tuning of the error threshold $\epsilon$ parameter and returns an approximate answer.   The threshold $\epsilon$ needs to be thoughtfully set because it can have significant impact on the outcome, as seen in the initial Q Learning of the Lake MDP.  
 
-Left 
+\textbf{Q Learning} is quite different from VI and PI as it is model free.  It returns an approximate answer and requires careful tuning of several parameters and uses several orders of magnitude more iterations and time.  A key issue is the tension between exploration and exploitation.  Exploration is needed to discover how the environment works and avoid local maxima and is governed by how fast $\epsilon$ is decayed. The Forest MDP demonstrated the need to continue to explore past the immediate cutting rewards.  The Lake MDP demonstrated how large state spaces require a lot of iterations and exploration to even find initial rewards.  Q Learning also is sensitive to the learning rate $\alpha$.  Q Learning requires significant review to solve with a great deal of interplay between the parameters and environment.  Also, unlike VI or PI, Q Learning is also sensitive to how challenging the state space is.  VI and PI could solve Large Lake with any amount of holes, while Q Learning would require significantly more time to explore a Lake with a lot of holes.
+
+One thing I should have done with Q Learning was to initialize the MDPs with small random values at the beginning to seed exploration.  By not doing this, particularly with the Lake MDP, I created a strong bias away from the goal state, which then needed to be overcome. 
+
 \section{References}
 \begin{tabular}{l p{2.75in}}
 \\
