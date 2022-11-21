@@ -277,7 +277,7 @@ As seen in \textbf{Figure \ref{fig:forest_states_vs_iterations}}, PI requires fe
 \label{fig:lake_vi}
 \end{figure*}
 
-\textbf{Figure \ref{fig:lake_vi}} shows the \textbf{\emph{Lake MDP}} for the Medium Map.  This is a little clearer than the Large map for highlighting key elements.  Like with the Forest, we can see as that with iterations, value spreads from its sources, in this case the Goal state in the bottom right corner.  As the value spreads, the arrows which indicate the policies action direction change.  The empty value spots are holes, with value 0 and policy directions point away from them where possible.  
+\textbf{Figure \ref{fig:lake_vi}} shows the \textbf{\emph{Lake MDP}} solution evolution for the Medium Map for VI.  This is a little clearer than the Large map for highlighting key elements.  Like with the Forest, we can see as that with iterations, value spreads from its sources, in this case the Goal state in the bottom right corner.  As the value spreads, the arrows which indicate the policies action direction change.  The empty value spots are holes, with value 0 and policy directions point away from them where possible.  
 
 
 \begin{figure}[!htb]
@@ -287,7 +287,7 @@ As seen in \textbf{Figure \ref{fig:forest_states_vs_iterations}}, PI requires fe
 \label{fig:lake_vi_estop}
 \end{figure}
 
-A key thing to note is the E Stop ($\epsilon$) value.  When I initially compared the results of the VI vs PI for the \textbf{\emph{Lake MDP}}, I found a significant number of differences in value and policy.  After digging in, I realized that the maximum value of this MDP was around .7.  The E Stop value is an absolute number and the default of 0.01 was much higher than the expected outcomes close the start state, which accounted for the differences.  By decreasing E Stop ($\epsilon$), it allowed for more accurate convergence, seen in \textbf{Figure \ref{fig:lake_vi_estop}}, creating only small value differences between VI and PI.  Once again, small differences in parameters produce very different outcomes.  
+A key thing to note is the error threshold ($\epsilon$) value (called E Stop on charts).  When I initially compared the results of the VI vs PI for the \textbf{\emph{Lake MDP}}, I found a significant number of differences in value and policy.  After digging in, I realized that the maximum value of this MDP was around .7.  The E Stop ($\epsilon$) value is an absolute number and the default of 0.01 was much higher than the expected values close to the start state, which accounted for the differences.  By decreasing E Stop ($\epsilon$), it allowed for more accurate convergence, seen best in the Large Lake MDP in \textbf{Figure \ref{fig:lake_vi_estop}}.  Once again, small differences in parameters produce very different outcomes.  
 
 \begin{figure}[!htb]
 	\begin{subfigure}[b]{0.25\textwidth}
@@ -311,9 +311,9 @@ A key thing to note is the E Stop ($\epsilon$) value.  When I initially compared
 \label{fig:lake_pi_large_solution}
 \end{figure}
 
-\textbf{Figure \ref{fig:lake_iteration_comparison} a} is another take on how VI works, comparing Iteration 15 to 16 and highlighting the Value and Policy differences.  The value changes slowly as it spreads from the reward state, changing policy along its change edge, but as it continues to change, we can see a second wave of policy changes.  This is in contrast to PI in \textbf{b}, which moves dramatically with each iteration.  \textbf{Figure \ref{fig:lake_pi_large_solution}} shows the Large Lake PI solution, which would be the most accurate.
+\textbf{Figure \ref{fig:lake_iteration_comparison} a} is another take on how VI works, comparing Iteration 15 to 16 and highlighting the Value and Policy differences.  The value changes slowly as it spreads from the reward state, changing policy along its change edge, but as it continues to change, we can see a second wave of policy changes.  This is in contrast to PI in \textbf{b}, which moves dramatically with each iteration.  \textbf{Figure \ref{fig:lake_pi_large_solution}} shows the Large Lake PI solution, which is the solved solution.
 
-\textbf{Figure \ref{fig:large_lake_comparisions} a} in the summary section shows the difference on the large map between the VI and PI solutions.  The value scale shows that the differences are small and increase farther away from the source of the reward, as well as one policy difference.  This makes sense, because each iteration sweep is propagating the source reward outward, so the source reward becomes more attenuated farther away. These differences could be reduced further by lowering E Stop ($\epsilon$), but would require more iterations for VI.
+\textbf{Figure \ref{fig:large_lake_comparisions} a} in the summary section shows the difference on the large map between the VI and PI solutions.  The value scale shows that the differences are small and increase farther away from the source of the reward, as well as one policy difference.  This makes sense, because each iteration sweep is propagating the source reward outward, so the source reward becomes more attenuated farther away. These differences could be reduced further by lowering the error threshold ($\epsilon$), but would require more iterations for VI.
 
 \begin{figure}[!htb]
 	\begin{subfigure}[b]{0.25\textwidth}
@@ -374,36 +374,24 @@ The first challenge with the \textbf{\emph{Forest MDP}} is that the maximum rewa
 \textbf{Figure \ref{fig:forest_q_e_99_a_99_frequencies}} shows the frequencies of actions and of visiting states at different iteration points.  The iteration scale is in 10,000 increments, which shows that an increase in the number of iterations of 5 orders of magnitude versus VI and PI. Ouch!  The left chart shows state frequency, which shows that all time is spent in states 0 and 1.  The right shows that the actions are almost evenly split between cut and wait.  The policy learned was to wait in state 0, cut in state 1.
 
 \begin{figure}[!htb]
-	\centering
- 	\begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Forest_Epsilon__Alpha_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
+
+ 	\begin{subfigure}[b]{0.275\textwidth}
+		\centering
+		\includegraphics[width=1.75in]{Figures/Q_Forest_Epsilon__Alpha_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
   	\end{subfigure}%
-	 \begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Forest_Error_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
-  	\end{subfigure}%
-	\begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Forest_Running_Reward_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
+	 \begin{subfigure}[b]{0.275\textwidth}
+	 	\centering
+		\includegraphics[width=1.75in]{Figures/Q_Forest_Error_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
+  	\end{subfigure}
+	\begin{subfigure}[b]{0.5\textwidth}
+		\centering
+		\includegraphics[width=1.75in]{Figures/Q_Forest_Running_Reward_Gamma_0_9__E_Dec_0_99__A_Dec_0_99.png}
   	\end{subfigure}
 \caption{Forest Q,  $\epsilon$ Decay of .99, $\alpha$ Decay of 0.99}
 \label{fig:forest_q_e_99_a_99_rewards}
 \end{figure}
 
-\textbf{Figure \ref{fig:forest_q_e_99_a_99_rewards}} provides insight.  The left chart shows $\epsilon$ and $\alpha$ low and unchanged.  A decay of 0.99 declines to its floor quickly.  The middle chart shows the error at each given iteration.  First, it is very low, which makes sense because only one state is changing per iteration.  It is quite noisy, but does have a declining initial pattern.  The right chart  takes the cumulative reward over the last 1000 iterations at each point.  This is the most important chart and shows how we are doing and the initial settings made all progress in the first few iterations, which don't show on this chart.  I will describe the convergence threshold line in reviewing \textbf{Figure \ref{fig:forest_q_e_99999_a_99999_rewards}}.
-
-\begin{figure}[!htb]
-	\centering
- 	\begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Forest_Epsilon__Alpha_Gamma_0_9__E_Dec_0_999998__A_Dec_0_99999.png}
-  	\end{subfigure}%
-	 \begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Forest_Error_Gamma_0_9__E_Dec_0_999998__A_Dec_0_99999.png}
-  	\end{subfigure}%
-	\begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Forest_Running_Reward_Gamma_0_9__E_Dec_0_999998__A_Dec_0_99999.png}
-  	\end{subfigure}
-\caption{Forest Q,  $\epsilon$ Decay of .999998, $\alpha$ Decay of 0.99999}
-\label{fig:forest_q_e_999998_a_99999_rewards}
-\end{figure}
+\textbf{Figure \ref{fig:forest_q_e_99_a_99_rewards}} provides insight.  The left chart shows $\epsilon$ and $\alpha$ essentially unchanged with a decay of 0.99 that declines to its floor quickly.  The middle chart shows the error at each given iteration.  First, it is very low, which makes sense because only one state is changing per iteration.  It is quite noisy, but does have a declining initial pattern.  The bottom chart  takes the cumulative reward over the last 1000 iterations at each point.  This is the most important chart and shows how we are doing.  With the initial settings the, the reward is very noisy and makes no improvement.  I will describe the convergence threshold line in reviewing \textbf{Figure \ref{fig:forest_q_e_99999_a_99999_rewards}}.
 
 \begin{figure}[!htb]
 	\begin{subfigure}[b]{0.25\textwidth}
@@ -418,25 +406,27 @@ The first challenge with the \textbf{\emph{Forest MDP}} is that the maximum rewa
 \label{fig:forest_q_e_999998_a_99999_frequencies}
 \end{figure}
 
+\begin{figure}[!htb]
+	\centering
+ 	\begin{subfigure}[b]{0.275\textwidth}
+		\includegraphics[width=1.75in]{Figures/Q_Forest_Epsilon__Alpha_Gamma_0_9__E_Dec_0_999998__A_Dec_0_99999.png}
+  	\end{subfigure}%
+	 \begin{subfigure}[b]{0.275\textwidth}
+		\includegraphics[width=1.75in]{Figures/Q_Forest_Error_Gamma_0_9__E_Dec_0_999998__A_Dec_0_99999.png}
+  	\end{subfigure}
+	\begin{subfigure}[b]{0.275\textwidth}
+		\includegraphics[width=1.75in]{Figures/Q_Forest_Running_Reward_Gamma_0_9__E_Dec_0_999998__A_Dec_0_99999.png}
+  	\end{subfigure}
+\caption{Forest Q,  $\epsilon$ Decay of .999998, $\alpha$ Decay of 0.99999}
+\label{fig:forest_q_e_999998_a_99999_rewards}
+\end{figure}
+
+
+
 \textbf{Figure \ref{fig:forest_q_e_999998_a_99999_rewards}} shows the results of dramatically increasing the decay factor.  The left chart shows that $\epsilon$ remains high throughout the experiment.  Error is more dramatic, but shows the same pattern as before.  The right running reward chart shows the key difference - a strongly rising running reward.  \textbf{Figure \ref{fig:forest_q_e_999998_a_99999_frequencies}} shows the shift from primarily states 0 and 1 to the final state as Q Learning goes on.  Actions also show a strong shift towards waiting with more iterations.  
 
 The key observation is that running reward is still increasing, which is primarily governed by the $\epsilon$ driven exploration.  The action frequency seems to indicate that policy is largely to wait, but exploration is still choosing both actions.  
 
-
-\begin{figure}[!htb]
-	\centering
- 	\begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Forest_Epsilon__Alpha_Gamma_0_9__E_Dec_0_99999__A_Dec_0_99999.png}
-  	\end{subfigure}%
-	 \begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Forest_Error_Gamma_0_9__E_Dec_0_99999__A_Dec_0_99999.png}
-  	\end{subfigure}%
-	\begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Forest_Running_Reward_Gamma_0_9__E_Dec_0_99999__A_Dec_0_99999.png}
-  	\end{subfigure}
-\caption{Forest Q,  $\epsilon$ Decay of .99999, $\alpha$ Decay of 0.99999}
-\label{fig:forest_q_e_99999_a_99999_rewards}
-\end{figure}
 
 \begin{figure}[!htb]
 	\begin{subfigure}[b]{0.25\textwidth}
@@ -451,27 +441,50 @@ The key observation is that running reward is still increasing, which is primari
 \label{fig:forest_q_e_99999_a_99999_frequencies}
 \end{figure}
 
-\textbf{Figure \ref{fig:forest_q_e_99999_a_99999_rewards}} shows a good overall solution for Forest.  We see $\epsilon$ and $\alpha$ declining over about 300,000 iterations.  Error declines as well.  The running reward chart is key, showing us reaching a very value quickly, reaching a solved plateau.   \textbf{Figure \ref{fig:forest_q_e_99999_a_99999_frequencies}} frequency charts in line with the reward charts.  
+\begin{figure}[!htb]
+	\centering
+ 	\begin{subfigure}[b]{0.275\textwidth}
+	\centering
+		\includegraphics[width=1.75in]{Figures/Q_Forest_Epsilon__Alpha_Gamma_0_9__E_Dec_0_99999__A_Dec_0_99999.png}
+  	\end{subfigure}%
+	 \begin{subfigure}[b]{0.275\textwidth}
+	 \centering
+		\includegraphics[width=1.75in]{Figures/Q_Forest_Error_Gamma_0_9__E_Dec_0_99999__A_Dec_0_99999.png}
+  	\end{subfigure}
+	\begin{subfigure}[b]{0.5\textwidth}
+		\centering
+		\includegraphics[width=1.75in]{Figures/Q_Forest_Running_Reward_Gamma_0_9__E_Dec_0_99999__A_Dec_0_99999.png}
+  	\end{subfigure}
+\caption{Forest Q,  $\epsilon$ Decay of .99999, $\alpha$ Decay of 0.99999}
+\label{fig:forest_q_e_99999_a_99999_rewards}
+\end{figure}
 
-After looking at the different runs and output, I chose running reward as the convergence criteria, creating a threshold for when the running reward stops increasing.  I used large windows and averages to prevent the noise from triggering the threshold.  I didn't move this convergence threshold back into the MDP toolbox, but it would be possible to do this.  The running reward chart serves as the convergence chart for Q Learning.
+
+
+\textbf{Figure \ref{fig:forest_q_e_99999_a_99999_rewards}} shows a good overall solution for Forest by reducing exploration a bit.  We see $\epsilon$ and $\alpha$ declining over about 300,000 iterations.  Error declines as well.  The running reward chart is key, showing us reaching a very value quickly, reaching a solved plateau.   \textbf{Figure \ref{fig:forest_q_e_99999_a_99999_frequencies}} frequency charts show action quickly moving to the optimal wait policy.
+
+After looking at the different runs and output, I chose running reward as the convergence criteria, creating a threshold for when the running reward stops increasing.  I used large windows and averages to prevent  noise from triggering the threshold.  I didn't move this convergence threshold back into the MDP toolbox, but it would be possible to do this.  The running reward chart serves as the convergence chart for Q Learning.
 
 \subsection{Lake MDP} 
-I was optimistic that \textbf{\emph{Lake MDP}} would be an easy extension of Forest, but the first key issue was that Lake is an episodic MDP.  Looking at the data, the state frequencies where all in holes and the goal state.  This was partially a function of removing the random reset of state every 100 episodes, which would have glossed over the underlying challenge.  The challenge was that the transition model from Frozen Lake was that the transitions from a hole or goal was back to itself.  The MDP implementation did not have a concept of terminal states.  One change I could have made was to change those transition states back to the start, but there would not be a concept of episode.  Instead, I created a modified episodic Q learning that takes a list of terminal states and tracks episodes.  For Lake Q Learning, I used episodes instead of iterations for charting, which I thought was a better representation for episodic learning, although it makes comparisons between Lake and Forest are a bit tricky.
+I was optimistic that \textbf{\emph{Lake MDP}} would be an easy extension of Forest, but the first key issue was that Lake is an episodic MDP.  Looking at the data, the state visit frequencies were almost all in the holes and the goal state.  This was partially a function of removing the random reset of state every 100 episodes, which would have glossed over the underlying challenge.  The challenge was that the transition model from Frozen Lake was that the transitions from a hole or goal was back to itself.  The MDP implementation did not have a concept of terminal states.  One change I could have made was to change those transition states back to the start, but there would not be a concept of episode.  Instead, I created a modified episodic Q learning that takes a list of terminal states and tracks episodes.  For Lake Q Learning, I used episodes instead of iterations for charting, which I thought was a better representation for episodic learning, although it makes comparisons between Lake and Forest  a bit tricky.
 
-With the episodic changes, the Small and Medium Lake maps were solved using  $\epsilon$ and $\alpha$ decays from Forest.  With the Large Lake map, I was not producing any useful convergence.  I moved up to 100 billion iterations and extremely large $\epsilon$ and $\alpha$ decays, with no progress.  Looking at the frequency charts, all visitation was close to the start.   \textbf{Figure \ref{fig:forest_q_reachability}} showed the challenge of reaching end states in the Forest MDP.  After consideration, with the highly stochastic actions and holes ending episodes, while I couldn't calculate it, the chance of reaching the end state without random restarts was effectively zero.  Ouch!
+With the episodic changes, the Small and Medium Lake maps were solved using  $\epsilon$ and $\alpha$ decays from Forest.  With the Large Lake map, I was not producing any useful convergence.  I moved up to 100 billion iterations and extremely large $\epsilon$ and $\alpha$ decays, with no progress.  Looking at the frequency charts, all visitation was close to the start.   \textbf{Figure \ref{fig:forest_q_reachability}} showed the challenge of reaching end states in the Forest MDP.  After consideration, with the highly stochastic actions and holes ending episodes, while I couldn't calculate it, the chance of reaching the end state in the Large Lake without random restarts was effectively zero.  Ouch!
 
 Based on this, I reduced the Large map size to 16 X 16.  I was still not able to solve, so I started to remove holes until I started to get traction and used this map. I went back and reran VI and PI using this as the new baseline Large Lake Map  (\emph{which is what is used through out the report now}).  The Large Lake used 20 million iterations for the experiment runs, which is 6 orders of magnitude greater than VI.
 
 \begin{figure}[!htb]
 	\centering
- 	\begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Lake_Epsilon_and_Alpha_Decay_Map_Large__Gamma_0_9__E_Dec_0_99999995__Alpha_0_1__A_Dec_0_99999995__Is_Slippery.png}
+ 	\begin{subfigure}[b]{0.275\textwidth}
+			\centering
+		\includegraphics[width=1.75in]{Figures/Q_Lake_Epsilon_and_Alpha_Decay_Map_Large__Gamma_0_9__E_Dec_0_99999995__Alpha_0_1__A_Dec_0_99999995__Is_Slippery.png}
   	\end{subfigure}%
-	 \begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Lake_Error_Map_Large__Gamma_0_9__E_Dec_0_99999995__Alpha_0_1__A_Dec_0_99999995__Is_Slippery.png}
-  	\end{subfigure}%
-	\begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Lake_Reward_Map_Large__Gamma_0_9__E_Dec_0_99999995__Alpha_0_1__A_Dec_0_99999995__Is_Slippery.png}
+	 \begin{subfigure}[b]{0.275\textwidth}
+	 		\centering
+		\includegraphics[width=1.75in]{Figures/Q_Lake_Error_Map_Large__Gamma_0_9__E_Dec_0_99999995__Alpha_0_1__A_Dec_0_99999995__Is_Slippery.png}
+  	\end{subfigure}
+	\begin{subfigure}[b]{0.5\textwidth}
+			\centering
+		\includegraphics[width=1.75in]{Figures/Q_Lake_Reward_Map_Large__Gamma_0_9__E_Dec_0_99999995__Alpha_0_1__A_Dec_0_99999995__Is_Slippery.png}
   	\end{subfigure}
 \caption{Lake Q,  $\epsilon$ Decay of 0.99999995, $\alpha$ Decay of 0.99999995}
 \label{fig:lake_q_e_99999995_a_99999995_rewards}
@@ -492,20 +505,23 @@ Based on this, I reduced the Large map size to 16 X 16.  I was still not able to
 \label{fig:lake_q_e_99999995_a_99999995_maps}
 \end{figure}
 
-\textbf{Figure \ref{fig:lake_q_e_99999995_a_99999995_rewards}} shows the first Large Lake run with some traction.  The left chart shows that exploration is still fairly high at the end, which is reflected in the right running reward chart.  Even though it does trigger the threshold criteria, we can see an upward trend, mostly due to the continued exploration.  The x axis for these charts is episodes, which is different from iterations used for all charts previously.   The length of these episodes decreases over time as there is less exploration and a policy is followed.   I will use iterations instead of episodes for better comparisons in the summary section.
+\textbf{Figure \ref{fig:lake_q_e_99999995_a_99999995_rewards}} shows the first Large Lake run with some traction.  The left chart shows that exploration is still  high at the end, which is reflected in the right running reward chart.  Even though it does trigger the threshold criteria, we can see an upward trend, mostly due to the continued exploration.  The x axis for these charts is episodes, which is different from iterations used for all charts previously.   The length of these episodes decreases over time as there is less exploration and a policy is followed.   I will use iterations instead of episodes for comparisons in the summary section.
 
-\textbf{Figure \ref{fig:lake_q_e_99999995_a_99999995_maps}} shows policy and the frequency that each state is visited in the last 1000 episodes.  On the left, we see the chart after 2000 episodes.  This shows a lot of general exploration originating out of the start location.  The right chart shows the pattern at the threshold episode, with a clear pattern or moving across the center of the map.  The policies in the top right and bottom left look a little funky and were probably not explored very much.
+\textbf{Figure \ref{fig:lake_q_e_99999995_a_99999995_maps}} shows policy and the frequency that each state is visited in the last 1000 episodes.  On the left, we see the chart after 2000 episodes.  This shows a lot of general exploration originating out of the start location.  The right chart shows the pattern at the threshold episode, with a clear pattern of moving across the center of the map.  The policies in the top right and bottom left look a little funky and were probably not explored very much.
 
 \begin{figure}[!htb]
 	\centering
- 	\begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Lake_Epsilon_and_Alpha_Decay_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_5__A_Dec_0_9999995__Is_Slippery.png}
+ 	\begin{subfigure}[b]{0.275\textwidth}
+			\centering
+		\includegraphics[width=1.75in]{Figures/Q_Lake_Epsilon_and_Alpha_Decay_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_5__A_Dec_0_9999995__Is_Slippery.png}
   	\end{subfigure}%
-	 \begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Lake_Error_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_5__A_Dec_0_9999995__Is_Slippery.png}
-  	\end{subfigure}%
-	\begin{subfigure}[b]{0.175\textwidth}
-		\includegraphics[width=1.2in]{Figures/Q_Lake_Reward_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_5__A_Dec_0_9999995__Is_Slippery.png}
+	 \begin{subfigure}[b]{0.275\textwidth}
+	 		\centering
+		\includegraphics[width=1.75in]{Figures/Q_Lake_Error_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_5__A_Dec_0_9999995__Is_Slippery.png}
+  	\end{subfigure}
+	\begin{subfigure}[b]{0.5\textwidth}
+			\centering
+		\includegraphics[width=1.75in]{Figures/Q_Lake_Reward_Map_Large__Gamma_0_9__E_Dec_0_9999995__Alpha_0_5__A_Dec_0_9999995__Is_Slippery.png}
   	\end{subfigure}
 \caption{Lake Q,  $\epsilon$ Decay=0.9999995, $\alpha$ Decay=0.9999995, Initial $\alpha$=0.5}
 \label{fig:lake_q_e_9999995_a_9999995_rewards}
@@ -535,7 +551,7 @@ The goal was to reduce the exploration and learning to allow for a true converge
 \label{fig:lake_q_large_solution}
 \end{figure}
 
-\textbf{Figure \ref{fig:lake_q_large_solution}} shows the final Large Lap Values and Policy.   \textbf{Figure \ref{fig:large_lake_comparisions} b} in the summary section shows the difference on the large map between the Q and PI solutions.  The value differences \textbf{decrease} farther away from the source of the reward, vs increase, which is the opposite of PI vs VI.  In addition, the differences are do not have a uniform gradient as in VI, but are patchy.  In Q learning, the reward propagation is entwined in the evolving policy through exploration and learning. 
+\textbf{Figure \ref{fig:lake_q_large_solution}} shows the final Large Lap Values and Policy.   \textbf{Figure \ref{fig:large_lake_comparisions} b} in the summary section shows the difference on the large map between the Q and PI solutions.  The value differences \textbf{decrease} farther away from the source of the reward, vs increase as in the comparison between PI vs VI.  In addition, the differences are do not have a uniform gradient as in VI, but are patchy.  In Q learning, the reward propagation is entwined in the evolving policy through stochastic exploration and learning. 
 
 There are many more policy differences than between PI and VI which highlights that small value differences can create different policies.  In general, the policy differences do not make a meaningful difference in outcome.  When we look at the differences around the goal in the bottom right corner,  down action or right action policy on the diagonal axis won't make a difference as they both move towards the goal.  There are many policies in a large stochastic environment which will produce similar outcomes.
 
@@ -543,7 +559,7 @@ There are many more policy differences than between PI and VI which highlights t
 
 \textbf{Table \ref{table:forest_comparisons}} reviews the performance for VI, PI and Q Learning for the Forest MDP.  PI's time is only slightly better than VI, but iteration count is much lower.  Q Learning is more than four orders of magnitude slower.  Iterations in VI and PI perform a sweep on all states, while Q Learning iterations only update one state.  To provide a more even comparison, the Equalized column normalizes this by dividing Q Learning iterations by 7, the number of state updates in a VI or PI iteration.  Q Learning uses more than four orders of magnitude more equalized iterations than PI.
 
-From the performance numbers it would seem to always use PI, but Q learning is likely to more useful in many real world situations.  Often, we don't know what the environment is and are truly trying to figure it out and will need a model free algorithm, like Q Learning.  Also, in continuous environment, you can't sweep all states. Q can be modified from a table model to a function approximation, often using a deep neural network, to explore this space.
+From the performance numbers it would seem to always use PI, but Q learning is likely to more useful in many real world situations.  Often, we don't know what the environment is and are truly trying to figure it out and will need a model free algorithm, like Q Learning.  Also, in continuous environment, you can't sweep all states. Q can be modified from a table model to a function approximation, often using a deep neural network.
 
 \begin{table}[!htb]
 	\begin{center}
@@ -581,7 +597,7 @@ From the performance numbers it would seem to always use PI, but Q learning is l
 	\label{table:lake_comparisons}
 \end{table}
 
-As discussed earlier, \textbf{Figure \ref{fig:large_lake_comparisions}} shows the differences in PI vs VI and PI vs Q Learning for the Large Lake MDP.  PI provides an exact answer as the baseline.  Policy far from the reward \ goal state can be different depending on error factor $\epsilon$ for VI.  Q Learning shows more differences impacted by exploration $\epsilon$ decay, initial learning rate $\alpha$ and  $\alpha$ decay.   However, in both cases, the different policies produce almost equivalent outputs, highlighting that in many MDPs, there can be many policies that are practically optimal.
+As discussed earlier, \textbf{Figure \ref{fig:large_lake_comparisions}} shows the differences in PI vs VI and PI vs Q Learning for the Large Lake MDP.  PI provides an exact answer as the baseline.  Values far from the reward \ goal state can be different depending on error factor $\epsilon$ for VI.  Q Learning shows more differences impacted by exploration $\epsilon$ decay, initial learning rate $\alpha$ and  $\alpha$ decay.   However, in both cases, the different policies produce almost equivalent outputs, highlighting that in many MDPs, there can be many policies that are practically optimal.
 
 \begin{figure}[!htb]
 	\begin{subfigure}[b]{0.25\textwidth}
@@ -604,7 +620,7 @@ All MDPs are very sensitive to the time horizon that is being considered, which 
 
 \textbf{Policy Iteration} (PI) required no tuning and would return the exact answer.  The MDP Toolbox iteration is susceptible to oscillation due to floating point math issues, but this could be resolved.  PI slows down exponentially with more states, but there are enhanced versions that can minimize this issues through different solving techniques.  
 
-\textbf{Value Iteration} (VI) does require some tuning of the error threshold $\epsilon$ parameter and returns an approximate answer.   The threshold $\epsilon$ needs to be thoughtfully set because it can have significant impact on the outcome, as seen in the initial Q Learning of the Lake MDP.  
+\textbf{Value Iteration} (VI) does require some tuning of the error threshold $\epsilon$ parameter and returns an approximate answer.   The threshold $\epsilon$ needs to be thoughtfully set because it can have significant impact on the outcome, as seen initial runs in the Lake MDP.  
 
 \textbf{Q Learning} is quite different from VI and PI as it is model free.  It returns an approximate answer and requires careful tuning of several parameters and uses several orders of magnitude more iterations and time.  A key issue is the tension between exploration and exploitation.  Exploration is needed to discover how the environment works and avoid local maxima and is governed by how fast $\epsilon$ is decayed. The Forest MDP demonstrated the need to continue to explore past the immediate cutting rewards.  The Lake MDP demonstrated how large state spaces require a lot of iterations and exploration to even find initial rewards.  Q Learning also is sensitive to the learning rate $\alpha$.  Q Learning requires significant review to solve with a great deal of interplay between the parameters and environment.  Also, unlike VI or PI, Q Learning is also sensitive to how challenging the state space is.  VI and PI could solve Large Lake with any amount of holes, while Q Learning would require significantly more time to explore a Lake with a lot of holes.
 
